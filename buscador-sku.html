@@ -1,0 +1,1456 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Buscador de SKU</title>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--tx:#1b1f24;--mut:#6b7280;--ok:#1a7f45;--amb:#a15c00;--ambbg:#fff3de;--nf:#b42318;--nfbg:#fde8e6;--pri:#0b5fff;--bd:#d8dce2}
+@media(prefers-color-scheme:dark){:root{--bg:#14171b;--card:#1e2329;--tx:#eceff3;--mut:#9aa3af;--ok:#5fd18b;--amb:#f0b050;--ambbg:#35280f;--nf:#ff8f84;--nfbg:#3a1a17;--pri:#6b9bff;--bd:#343b44}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:16px}
+header{padding:12px 16px;background:var(--card);border-bottom:1px solid var(--bd);position:sticky;top:0;z-index:5}
+header h1{margin:0;font-size:18px}
+header small{color:var(--mut)}
+main{max-width:720px;margin:0 auto;padding:12px}
+.panel{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px;margin-bottom:12px}
+.panel h2{margin:0 0 8px;font-size:15px;color:var(--mut);font-weight:600}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid label{display:flex;flex-direction:column;font-size:12px;color:var(--mut);gap:3px}
+.grid input,.grid select,textarea{width:100%;padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);font-size:16px;font-family:inherit}
+textarea{min-height:70px}
+.help{font-size:13px;color:var(--mut);margin-top:6px;line-height:1.4}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+button.b{padding:10px 14px;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);font-size:15px}
+button.p{background:var(--pri);color:#fff;border-color:var(--pri)}
+.card{background:var(--card);border:1px solid var(--bd);border-left:6px solid var(--ok);border-radius:12px;padding:10px 12px;margin-bottom:10px}
+.card.amb{border-left-color:var(--amb)}
+.card.nf{border-left-color:var(--nf)}
+.top{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--mut)}
+.top .int{font-weight:700;color:var(--tx);font-size:16px}
+.chip{font-size:11px;padding:2px 8px;border-radius:99px;background:var(--bg);border:1px solid var(--bd)}
+.del{margin-left:auto;border:0;background:transparent;color:var(--nf);font-size:22px;padding:0 6px}
+.sku{font-size:30px;font-weight:800;letter-spacing:.5px;line-height:1.1;margin-top:4px}
+.sku small{font-size:12px;font-weight:500;color:var(--mut);letter-spacing:0}
+.desc{font-size:15px;margin:2px 0 8px}
+.q{display:flex;align-items:center;gap:8px}
+.q button{width:42px;height:42px;font-size:22px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--tx)}
+.q input{width:90px;height:42px;text-align:center;font-size:20px;font-weight:700;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx)}
+.q input.miss{border-color:var(--nf);background:var(--nfbg)}
+.warn{font-size:13px;margin-top:6px}
+.amb .warn{color:var(--amb)}.nf .warn{color:var(--nf)}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.opts button{text-align:left;padding:8px 10px;border-radius:8px;border:1px solid var(--amb);background:var(--ambbg);color:var(--tx);font-size:14px}
+.sugg{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.sugg button{padding:6px 10px;border-radius:99px;border:1px solid var(--nf);background:var(--nfbg);color:var(--tx);font-size:13px}
+.tot{font-weight:700;font-size:17px;margin-bottom:8px}
+.empty{text-align:center;color:var(--mut);padding:24px 8px}
+
+.mic{width:100%;padding:16px;font-size:18px;font-weight:700;border-radius:14px;border:2px solid var(--pri);background:var(--pri);color:#fff}
+.mic.on{background:var(--nf);border-color:var(--nf)}.mic[disabled]{opacity:.6}
+#live{margin-top:8px;font-size:15px;min-height:22px}
+.dqr{margin:10px 0;padding:12px;border-radius:10px;font-size:17px;font-weight:700;line-height:1.35}
+.dqr.ok{background:var(--ambbg);color:var(--ok);border:1px solid var(--ok)}.dqr.no{background:var(--nfbg);color:var(--nf);border:1px solid var(--nf)}
+.dqr small{display:block;font-weight:400;font-size:13px;color:var(--mut)}
+.dql{font-size:13px;max-height:180px;overflow:auto;margin-top:6px}.dql div{padding:4px 0;border-bottom:1px solid var(--bd)}
+.card.hl{outline:3px solid var(--pri);outline-offset:2px}
+.sw{display:flex;align-items:center;gap:8px;font-size:14px;margin-top:8px}
+.sep{border:0;border-top:1px solid var(--bd);margin:12px 0}
+details{margin-top:8px;font-size:13px}
+pre{white-space:pre-wrap;word-break:break-word;background:var(--bg);padding:8px;border-radius:8px;max-height:220px;overflow:auto;font-size:12px}
+.raw{font-size:12px;color:var(--mut);margin-top:6px;word-break:break-word}
+
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-start;justify-content:center;padding:max(16px,10vh) 16px 16px;z-index:50;overflow:auto;touch-action:manipulation}
+.ov[hidden],.note[hidden]{display:none}
+.dlok{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:70;display:flex;gap:8px;align-items:center;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;box-shadow:0 4px 16px rgba(0,0,0,.35)}
+.dlok[hidden]{display:none}
+.dlok span{flex:1;line-height:1.3}
+.ver{text-align:center;font-size:12px;opacity:.6;padding:8px 16px 24px}
+.ov .box #dmsg,.ov .box p{white-space:pre-line}
+.ov .box{background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:14px;padding:16px;max-width:420px;width:100%}
+.ov p{margin:0 0 10px;line-height:1.4}
+.ov input{width:100%;padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);font-size:16px;margin-bottom:10px}
+.note{font-size:14px;margin:0 0 10px;padding:8px 10px;border-radius:10px;background:var(--ambbg);color:var(--amb)}
+.pv{position:fixed;top:0;left:0;right:0;bottom:0;height:100%;max-height:100dvh;background:var(--bg);z-index:60;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
+.pv[hidden]{display:none}
+.pvbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 16px;background:var(--card);border-bottom:1px solid var(--bd)}
+.pvbody{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:12px 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.paper{background:#fff;color:#000;max-width:680px;margin:0 auto;padding:14px;font-family:Arial,Helvetica,sans-serif;font-size:12px;box-shadow:0 1px 8px rgba(0,0,0,.35);overflow-x:auto}
+.paper h2{margin:0 0 8px;font-size:16px;text-align:center;letter-spacing:1px;color:#000}
+.paper .meta{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;border:1px solid #000;padding:6px 8px;margin-bottom:8px}
+.paper table{width:100%;border-collapse:collapse;font-size:11px}
+.paper td,.paper th{font-size:11px}
+.paper th,.paper td{border:1px solid #000;padding:3px 5px;text-align:left;vertical-align:top;color:#000}
+.paper th{background:#e6e6e6;font-size:11px}
+.paper td.n,.paper th.n{text-align:right}
+.paper tbody tr:nth-child(even) td{background:#ececec}
+.paper .pie{margin-top:10px;border:1px solid #000;padding:8px;display:grid;grid-template-columns:1fr 1fr;gap:6px 12px}
+/* ---- hoja impresa ---- */
+#sheet{display:none}
+@media print{
+  @page{size:A4;margin:12mm}
+  html,body{background:#fff!important;color:#000!important}
+  header,main{display:none!important}
+  #sheet{display:block;font-family:Arial,Helvetica,sans-serif;color:#000;font-size:12px}
+  #sheet h2{margin:0 0 8px;font-size:16px;text-align:center;letter-spacing:1px}
+  #sheet .meta{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;border:1px solid #000;padding:6px 8px;margin-bottom:8px}
+  #sheet .meta div{white-space:nowrap}
+  #sheet table{width:100%;border-collapse:collapse}
+  #sheet thead{display:table-header-group}
+  #sheet th,#sheet td{border:1px solid #000;padding:3px 6px;text-align:left;vertical-align:top}
+  #sheet th{background:#e6e6e6;font-size:11px}
+  #sheet td.n,#sheet th.n{text-align:right}
+  #sheet tr{page-break-inside:avoid}
+  #sheet tbody tr:nth-child(even) td{background:#ececec!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #sheet .pie{margin-top:10px;border:1px solid #000;padding:8px;display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;page-break-inside:avoid}
+  #sheet .pie b{font-weight:700}
+}
+</style>
+</head>
+<body>
+<header><h1>Buscador de SKU</h1><small id="cat"></small></header>
+<main>
+  <div class="row" style="margin:0 0 12px"><button class="b p" id="bdocs">🔎 Consulta documentos</button><button class="b p" id="bbk">💾 Hacer respaldo y enviar</button></div>
+  <div id="fri" class="note" hidden style="display:none;align-items:center;gap:8px;flex-wrap:wrap"><span id="frit">📅 Hay partes sin respaldar: haga el respaldo y envíelo.</span></div>
+  <input type="file" id="fbk" accept=".json,application/json" hidden>
+  <div class="panel">
+    <h2>Datos del parte</h2>
+    <div class="grid">
+      <label>Sucursal<select id="f_suc"></select><input id="f_suc2" inputmode="numeric" placeholder="N° de cliente" autocomplete="off" style="display:none;margin-top:6px"></label>
+      <label>Fecha<input id="f_fec" type="date"></label>
+      <label>Reparto<input id="f_rep" inputmode="numeric" autocomplete="off"></label>
+      <label>Cuenta<input id="f_cta" inputmode="numeric" autocomplete="off"></label>
+      <label style="grid-column:1/3">N° de documento (parte de devolución)<input id="f_doc" inputmode="numeric" autocomplete="off"></label>
+    </div>
+        <div id="sucname" class="help"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Cargar productos</h2>
+    <textarea id="vtxt" placeholder="Toque aquí y dicte con el micrófono 🎤 del teclado: C.I. y cantidad (ej.: 98236 13)"></textarea>
+    <div class="row"><button class="b p" id="vadd">Agregar renglones</button></div>
+    <hr class="sep">
+    <div class="grid" style="grid-template-columns:2fr 1fr"><label>Código (C.I. o SKU)<input id="f_code" inputmode="numeric" pattern="[0-9]*" enterkeyhint="next" autocomplete="off" placeholder="Ej.: 63199"></label><label>Cantidad<input id="f_qty" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" autocomplete="off" placeholder="Ej.: 12"></label></div>
+    <div class="row"><button class="b p" id="add">Agregar</button></div>
+    <hr class="sep">
+    <div class="row" style="margin-top:0">
+      <button class="b p" id="bcam">📷 Cámara</button>
+      <button class="b p" id="bfile">📎 Subir imagen / PDF</button>
+      <button class="b" id="ocrre" style="display:none">Volver a leer</button>
+    </div>
+    <label class="sw"><input type="checkbox" id="ocrenh"> Realce de imagen: aplana sombras (solo si la foto tiene mucha sombra; si lee mal, toque «Volver a leer» cambiando esta opción)</label>
+    <input type="file" id="fcam" accept="image/*" capture="environment" hidden>
+    <input type="file" id="ffile" accept="image/*,application/pdf" hidden>
+    <div id="ocrstat" class="help"></div>
+    <details id="ocrdet" style="display:none"><summary>Texto leído</summary><pre id="ocrtxt"></pre></details>
+  </div>
+
+  <div id="note" class="note" hidden></div>
+  <div id="list"></div>
+
+  <div class="panel" id="foot" style="display:none">
+    <div class="tot" id="tot"></div>
+    <div class="grid">
+      <label>N° sticker LLSSA<input id="f_llssa" inputmode="numeric" autocomplete="off"></label>
+      <label>N° sticker MILLAN<input id="f_mill" inputmode="numeric" autocomplete="off"></label>
+    </div>
+    <div class="row" style="margin:0 0 8px;align-items:center"><button class="b p" id="bread">🔊 Escuchar carga y revisar</button><span id="spd" style="display:flex;gap:6px;align-items:center"><button class="b" data-v="1">x1</button><button class="b" data-v="1.5">x1,5</button><button class="b" data-v="2">x2</button><button class="b" data-v="3">x3</button></span></div>
+    <div class="row">
+      <button class="b p" id="bprint">Imprimir</button>
+      <button class="b p" id="bpdf">Descargar PDF</button>
+      <button class="b" id="bshare">Compartir</button>
+      <button class="b" id="bcsv2">CSV por SKU</button>
+    </div>
+  </div>
+</main>
+<div class="ver">Versión 44 · 09/11/2026</div>
+<div id="sheet"></div>
+<div class="pv" id="pv" hidden><div class="pvbar"><button class="b" id="pvx">Cerrar</button><b>Vista del PDF</b><button class="b p" id="pvd">Descargar PDF</button></div><div class="pvbody" id="pvbody"><div class="paper" id="pvp"></div></div></div>
+<div class="dlok" id="dlok" hidden><span id="dlokt"></span><button class="b p" id="dlopen">Abrir y compartir</button><button class="b" id="dlx" aria-label="Cerrar">×</button></div>
+<div class="ov" id="dq" hidden><div class="box"><p><b>Consulta documentos</b><br><small>Escriba el N° de documento o N°-día-mes (ej.: 123456-09-11).</small></p><input id="dqi" autocomplete="off" inputmode="text" placeholder="123456-09-11"><div class="row" style="justify-content:flex-end;margin:0 0 6px"><button class="b" id="dqx">Cerrar</button><button class="b p" id="dqgo">Consultar</button></div><div id="dqr"></div><div class="row" style="margin:0 0 6px"><button class="b" id="dqrest">Restaurar respaldo</button></div><details><summary>Documentos cargados en este equipo</summary><div class="dql" id="dql"></div></details></div></div>
+<div class="ov" id="dlg" hidden><div class="box"><p id="dmsg"></p><input id="dinp" hidden autocomplete="off"><div class="row" style="justify-content:flex-end"><button class="b" id="dno">Cancelar</button><button class="b p" id="dyes">Aceptar</button></div></div></div>
+
+<script>
+// Formato de cada línea: Empresa|internos (separados por -)|SKU|Descripción   (M = Mastellone, D = Danone)
+const CATALOG=`M|21110102069|3483|Leche Entera LS 3% B.Animal Sa
+M|21110102070|4483|Leche LA SERENISIMA Ultra Entera 3% 1 L
+M|21110155001|1923|Leche Entera 3% Casanto 1L
+M|21110301058|3480|Leche Desc LS 1% B.Animal Sach
+M|21110301060|3482|Leche Desc LS 2% B.Animal Sach
+M|21110301063|4481|Leche LA SERENISIMA Sach Desc 1% 1L
+M|21110301064|4482|Leche LA SERENISIMA parc. Desc. 2% 1 L
+M|21110334001|1921|Leche Descremada 1% Casanto 1L
+M|21110334002|1922|Leche Descremada 2% Casanto 1L
+M|21110357001|3520|Leche Desc LS Reduc. Lactosa 1 L
+M|21120101060|3355|Leche UAT Entera LA SERENISIMA 1 L
+M|21120101064|3630|Leche UAT 3% LS Brik 1 L
+M|21120303024|3356|Leche UAT Desc LA SERENISIMA 1 L
+M|21120303025|3336|Leche UAT LA SERENISIMA ZeroLa 1 L
+M|21120303033|3586|Leche Uat Proteina La serenisi 1 L
+M|21120303037|3585|Leche UAT Desc LS Prebiotica 1 L
+M|21120303040|3584|Leche UAT Desc LS Barista Bot 1 L
+M|21120303041|3631|Leche UAT 1% LS Brik 1 L
+M|21120303043|1721|Leche Desc LS Protein Chocolat 1 L
+M|21120361002|3353|Leche UAT Desc LA SERENISIMA 1 L
+M|21120361003|3358|Leche UAT Desc LA SERENISIMA 1 L
+M|21140103001|3401|Alim Veg Almendra LS 1L
+M|21140103002|3403|Alim Veg Almendra sin azucar 1 L
+M|21140103003|3409|Preparado Vegetal Bebible LS 1 L
+M|21140103004|3416|Alim Veg Alm LA SERENISIMA Bar 1 L
+M|21210102017|1413|Crema UAT LS Batir Slim 200ml
+M|21210102018|1411|Crema UAT LS Batir TetraTop 330 ml
+M|21210102021|1419|Crema UAT LS Liviana TetraTop 200 ml
+M|21210307004|0141|Crema UAT LS Batir TetraTop 520 ml
+M|21210307005|1416|Crema UAT LS Culinaria TetraTo 200 ml
+M|21210307006|1417|Crema UAT LS Culinaria TetraTo 330 ml
+M|21210307015|0117|Crema UAT LS Batir TetraTop 200 ml
+M|21210307016|1420|Crema LS Zero Lactosa Tetra Top 200 ml
+M|21210307017|1422|Crema Culinaria LA SERENISIMA 520 ml
+M|21240516018|5660|Bebida Lactea UAT Vain LA SERE 200 ml
+M|21240516019|5660|Bebida Lactea UAT Frut LA SERE 200 ml
+M|21240516020|6650|Beb Lactea La Serenisima 900 ml
+M|21240516021|6650|B.Lactea Frut LA SERENISIMA Sa 900 ml
+M|21240516024|6610|B.Lactea DDL LA SERENISIMA Sac 900 ml
+M|21240519001|8726|Beb.Lactea SENSE Caramel 200ml
+M|21240519002|8726|Beb.Lactea SENSE Capuccino 200 ml
+M|21240519004|1722|Beb. de Leche UAT Protein Caca 200 ml
+M|21270104001|5200|Manteca LS Bienestar Animal 100g
+M|21270104003|5400|Manteca LS B.Animal 200g
+M|21270301004|3457|Manteca LS Light Paquete 200GR
+M|21280104023|6252|D.Leche La Serenisima Colonial 400 g
+M|21280104024|6253|D.Leche La Serenisima Clasico 400 g
+M|21280104025|6254|D.Leche La Serenisima Colonial 1 kg
+M|21280104026|6251|D.Leche La Serenisima Colonial 250 g
+M|21280104031|1043|D.Leche La Serenisima Clasico 1 kg
+M|21280104032|6241|Dulce de Leche Zero Lactosa 250 g
+M|21280306004|3877|Dulce de Leche Ser 300g
+M|21280503003|0670|Dulce de leche LA SERENISIMA Repostero 400 g
+M|21310506001|3264|Q.Untable SABORES LA SERENISIM 180 g
+M|21310506002|3263|QuesoUntable SABORES LA SERENI 180 g
+M|21310506003|3266|Queso Untable SABORES LA SEREN 180 g
+M|21310712011|3738|Queso LS Cremon Light Pote 280 g
+M|21310712012-29411|3739|Queso LS Cremon Original Pote 280 g
+M|4808|3522|Leche Descremada LS ZeroLact 1 L
+M|87751|4307|Leche Armonia Sach Desc 2% 1 L
+M|21320110016|3217|Q.Procesado Finlandia 180g
+M|21320110019|3732|Q.Procesado Finlandia 290g
+M|21320110024|3240|Queso LS Finlandia Reducido en 180 g
+M|21320110025|3241|Queso LS Finlandia Reducido en 290 g
+M|21320306023|3733|Q.Procesado Finlandia Light 290 g
+M|21320306024|3218|Q.Procesado Finlandia Light 180 g
+M|21330102003|1028|ricota entera GARCIA 500 g
+M|21330307002|1142|Ricotta Garcia Semigrasa Sache 500 g
+M|21340120005|2399|Queso Mozzarella La Serenisima 220 g
+M|21340120006|2499|Queso Mozzarella La Serenisima 500 g
+M|21350130001|3714|Queso Camembert FINLANDIA 200 g
+M|21350131001|3720|Queso Brie FINLANDIA 100 g
+M|21370313001|1672|Queso FINLADIA chef fetas danb 150 g
+M|21370313002|1671|Queso FINLADIA chef fetas ched 150 g
+M|21370313003|1673|Queso FINLANDIA Fet Danbo 150 g
+M|21380123013|2229|Queso rallado la SERENISIMA 35 g
+M|21380123014|2230|Queso rallado la SERENISIMA 70 g
+M|21380123015|2231|Queso rallado la SERENISIMA 130 g
+M|21380123016|2232|Queso rallado la SERENISIMA 175 g
+M|21380123017|2233|Queso Rallado Parmesano LA SER 80 g
+M|21380152001|6676|Queso FINLADIA hebras cuatro q
+M|21380152002|6673|Queso FINLANDIA Heb 4 qso
+M|21380152003|6677|Queso FINLANDIA Hebras C
+M|21380152004|6673|Queso FINLANDIA Hebras MP
+M|21630105001|6026|salchichas GRANJA IRIS de vien
+M|21630105012|6029|salchichas GRANJA IRIS
+M|24410143011|417600|Queso Port Salut LA SERENISIMA
+M|24410143012|675222|Queso Port Salut Sin Sal LA SE
+M|24410519001|931366|queso cremoso LS CREMON
+M|24410519002|144704|Queso Cremoso La seren Cremon
+M|24410519012|476256|Queso Cremoso La seren Cremon
+M|24410519013|476263|Queso Cremoso La seren Cremon
+M|24410519015|606783|Queso Cremoso La seren Cremon
+M|24410519016|606806|Queso Cremoso La seren Cremon
+M|24411127008|417617|Queso Port Salut LS s/lactosa
+M|24430113007|417808|Queso Pategras La Serenisima
+M|24430315001|986977|fiambrin LA SERENISIMA x kg
+M|24431519004|418508|Queso Gouda La Serenisima x kg
+M|24432014002|889094|queso minifynbo LA SERENISIMA
+M|24450319005|418522|Queso Reggianito La Serenisima
+M|24450511004|418515|Queso Sardo La Serenisima
+M|24450712001|780445|Queso Parmesano LA SERENISIMA
+M|24460102003|418539|Queso Provolone La Serenisima
+M|24461106001|4713|Queso Provoleta LS 180 g
+M|24471377001|728492|Queso Brie FINLANDIA x
+M|63199|3520|Leche Desc LS Reduc. Lactosa 1 L
+M|14775-14784-49396-44418-3039-45951-3043|4483|Leche LA SERENISIMA Ultra Entera 3% 1 L
+M|14775-14784-49396-44418-3039-45951-3043|4482|Leche LA SERENISIMA parc. Desc. 2% 1 L
+M|14775-14784-49396-44418-3039-45951-3043-43936|4481|Leche LA SERENISIMA Sach Desc 1% 1L
+M|48332-48333|3630|Leche UAT 3% LS Brik 1 L
+M|48332-48333|3631|Leche UAT 1% LS Brik 1 L
+M|46780|3354|Leche clásica más liviana bot 1 L
+M|29777|3355|Leche UAT Entera LA SERENISIMA 1 L
+M|29775|3356|Leche UAT Desc LA SERENISIMA 1 L
+M|46775|3353|Leche UAT Desc menos calorias 1 L
+M|36292|3336|Leche UAT LA SERENISIMA ZeroLa 1 L
+M|47169|3358|Leche UAT Desc Hierro 1 L
+M|99984|3581|Leche UAT Extra calcio + colageno 1 L
+M|38072|3584|Leche UAT Desc LS Barista Bot 1 L
+M|97606|3585|Leche UAT Desc LS Prebiotica 1 L
+M|68617|3586|Leche Uat Proteina La serenisi 1 L
+M|43430-63824|1721|Leche Desc LS Protein Chocolat 1 L
+M|70690|4365|Leche en Polvo Zero 400 g
+M|71725|4371|Leche en Polvo Zero descremada 400 g
+M|99991|4377|Leche en Polvo Proteína 400 g
+M|70683|4362|Leche en polvo descremada 200 gr
+M|70682|4361|Leche en Polvo entera 200 gr
+M|70685|4363|Leche en Polvo entera 400 gr
+M|70687|4364|Leche en Polvo descremada 400 gr
+M|18558|4373|Leche en Polvo entera 800 gr
+M|18563|4374|Leche en Polvo descremada 800 gr
+M|27780|3313|Leche en polvo Armonia 800 gr
+M|51156|3316|Leche en Polvo Armonía 400 gr
+M|8993|1419|Crema UAT LS Liviana Tetra Top 200 ml
+M|12988|1413|Crema UAT LS Batir Slim 200ml
+M|61481|1420|Crema LS Zero Lactosa Tetra Top 200 ml
+M|27477|1412|Crema de leche 520 cm3
+M|16574|1411|Crema UAT LS Batir TetraTop 330 ml
+M|31437|1417|Crema UAT LS Culinaria Tetra To 330 ml
+M|31447|1416|Crema UAT LS Culinaria Tetra To 200 ml
+M|16570|1170|Crema de leche 200 cm3
+M|82222|5200|Manteca LS Bienestar Animal 100g
+M|29787|5400|Manteca LS B.Animal 200g
+M|81128|3457|Manteca LS Light Paquete 200GR
+M|48975|1043|D.Leche La Serenisima Clasico 1 kg
+M|70631|6251|D.Leche La Serenisima Colonial 250 g
+M|70638|6252|D.Leche La Serenisima Colonial 400 g
+M|54993|6254|D.Leche La Serenisima Colonial 1 kg
+M|70888|6253|D.Leche La Serenisima Clasico 400 g
+M|5692|6241|Dulce de leche Zero 250 g
+M|10098|67|Dulce de leche LA SERENISIMA Repostero 400 g
+M|83395|4667|Queso Port Salut sin sal 500 g
+M|83396-66261|4664|Queso Port Salut Light 500 g
+M|78119|190|Queso Cremon doble crema fracc 500 g
+M|22100|3181|Queso cremon cremoso fracc 500 g
+M|94226|160|Queso cremon doble crema horma 3 kg
+M|44169|3180|Queso Cremon cremoso horma 3 kg
+M|4302|476|Queso Cremon Light fracc 500 g
+M|47880|1671|Queso FINLADIA chef fetas ched 150 g
+M|47878|1672|Queso FINLADIA chef fetas danb 150 g
+M|47875|1673|Queso FINLANDIA Fet Danbo 150 g
+M|74049|4713|Queso Provoleta LS 180 g
+M|47881-47882-17207|6677|Queso Hebras
+D|87397-21240504003|958102|Actimel Botellita 100 Gr x1 Frutilla
+D|87399-21240504004|958185|Actimel Botellita 100 Gr x1 Multifruta
+D|61937-21240504005|958510|Actimel Naranja Reforzado Vit C x 100g
+D|70889-21240504002|956902|Actimel Kids licencia Marvel 100g
+D|31837-21240504001|956702|Actimel Botellita Frutilla 600ml
+D|65767-21230731001|953776|Activia Sachet Manzana Frutilla Deslactosado x 900g
+D|65857-21230731002|953781|Activia Sachet Ciruela Deslactosado x 900g
+D|37973-21230103002|936301|Batido FFS Calci sabor vainilla x 120g
+D|37975-21230103003|936341|Batido FFS Calci sabor Frutos Rojos x 120g
+D|96115-21320101002|614900|Casancrem Clasico 500 gr
+D|96142-21310303003|615000|Casancrem Balance 500 gr
+D|60865-21310303001|609400|Casancrem Light (sin sellos) 290 gr
+D|66385-21320101001|613600|Casancrem Clasico 290 gr
+D|66387-21310303002|613800|Casancrem Balance 290 gr
+D|35942-21160101001|919507|Leche chocolatada x 200ml
+D|79065|915528|Cindor Mocha 1L
+D|9568-21160101002|919607|Leche chocolatada x 1L
+D|96155-21260107008|954407|Danette FFS Chocolate x 380g (95g x 4)
+D|74977-21260107010|954606|Danette FFS Dulce de Leche x380g (95g x 4)
+D|74985-21260107009|954501|Danette FFS Flan sabor Vainilla x380g (95g x 4)
+D|15921-21260107007|953907|Danette Copa Chocolate x 100g
+D|15920-21260107006|953906|Danette Copa DDL x 100g
+D|46191-21260309001|640008|Danette FFS Flan x190g (95g x 2)
+D|46194-21260107004|640007|Danette FFS Chocolate x 190g (95g x 2)
+D|46193-21260107003|640006|Danette FFS Dulce de Leche x190g (95g x 2)
+D|46205-21260107002|640005|Danette FFS Americana x190g (95g x 2)
+D|99844-21260107001|640004|Danette FFS Pistacho x190g (95g x 2)
+D|99846-21260107005|640012|Danette FFS Flan DDL x190g (95g x 2)
+D|70701-21220758002|643402|Danonino Botellita x 100g Frutilla
+D|70700-21220758001|643401|Danonino Botellita x 100g Vainilla
+D|95248-21220758005|643702|Danonino Sachet Frutilla x 900g
+D|70703-21220758003|643501|Danonino Botellita x 185g Vainilla
+D|70704-21220758004|643502|Danonino Botellita x 185g Frutilla
+D|52420-21220926001|643601|Danonino FFS x 80,5g Vainilla
+D|52421-21220926002|643602|Danonino FFS x 80,5g Frutilla
+D|68408-21220733001|138701|Yogur Bebible Sachet Vainilla x 900ml
+D|68442-21220733002|138702|Yogur Bebible Sachet Frutilla x 900ml
+D|18613-21220910001|138401|Yogur FFS batido descremado vainilla x 120g
+D|18618-21220910002|138402|Yogur FFS batido descremado frutilla x 120g
+D|87379|138201|Yogur Firme Gran Compra vainilla 120 grs
+D|87380|138202|Yogur Firme Gran Compra frutilla 120 grs
+D|53790-21320149002|615200|Queso LSC Regular x 460g
+D|53774-21320322002|615100|Queso LSC Light x 460g
+D|66389-21320149001|614200|Queso LSC Regular con Vit A y D 290g
+D|66391-21320322001|614300|Queso LSC Light con Vit A y D 290g
+D|68457-21160114002|990707|Leche Chocolatada x 1Lts
+D|68462-21160114001|990607|Leche Chocolatada x 200ml
+D|46171-21260303001|640018|Postre LSC FFS Flan x 190g (95g X 2)
+D|46215-21260143002|640017|Postre LSC FFS Chocolate x 190g (95g X 2)
+D|46209-21260143001|640016|Postre LSC FFS Vainilla x 190g (95g X 2)
+D|98206-21230144002|610018|Yogur Cremoso FFS Descremado Vainilla 120 g
+D|98208-21230144001|610017|Yogur Cremoso FFS Descremado Frutilla 120 g
+D|98215-21220171009|610022|Yogur Firme Entero Vainilla 190 g
+D|98216-21220171008|610021|Yogur Firme Entero Frutilla 190 g
+D|98218-21220171002|610013|Yogur Firme FFS Entero Vainilla 120 g
+D|98222-21220171001|610012|Yogur Firme FFS Entero Frutilla 120 g
+D|98235-21220339002|610028|Yogur Entero Cremoso con rocklets x164g
+D|98236-21220339001|610026|Yogur Entero Cremoso con cereales x159gr
+D|98241-21220171004|610015|Yogur Cremoso FFS Entero Vainilla 120 g
+D|98255-21220171003|610014|Yogur Cremoso FFS Entero Frutilla 120 g
+D|98259-21220171005|610016|Yogur Cremoso FFS Entero Durazno 120 g
+D|98260-21220171006|610019|Yogur Cremoso FFS x4 Entero Frutilla 480 g
+D|98267-21220171007|610020|Yogur Cremoso FFS x4 Entero Vainilla 480 g
+D|98273-21230323001|610027|Yogur Descremado Cremoso con cereales x157gr
+D|98296-21230144004|610024|Yogur Firme Descremado Vainilla 190 g
+D|98297-21230144003|610023|Yogur Firme Descremado Frutilla 190g
+D|98328-21230748003|610006|Sachet Yogur Deslactosado Frutilla 900g
+D|98329-21230748004|610007|Sachet Yogur Deslactosado Vainilla 900g
+D|98337-21220756001|610001|Sachet Yogur Entero Vainilla 900g
+D|98375-21220756002|610002|Sachet Yogur Entero Frutilla 900g
+D|98404-21220756003|610003|Sachet Yogur Entero Durazno 900g
+D|98414-21230748002|610005|Sachet Yogur Descremado Vainilla 900g
+D|98453-21230748001|610004|Yogur Descremado Frutilla 900g
+D|98456|610009|Yogur Entero Sachet Vainilla 1100 g
+D|98460|610008|Yogur Entero Sachet Frutilla 1100g
+D|98463-21220756005|610011|Yogur Sachet Entero Sabor Vainilla 1300 g
+D|16436-21220756004|610010|Yogur Sachet Entero Frutilla 1300 g
+D|98498|610029|Yogur Cremoso Entero Natural 480 g
+D|98506-21220171010|610030|Yogur Cremoso Entero Natural 120 g
+D|9035-21220171011|610034|LS Yogur FFS Firme Entero Frutilla x 480g (x4)
+D|9086-21220171012|610035|LS Yogur FFS Firme Entero Vainilla x 480g (x4)
+D|90326-21230701005|939602|Yogur bebible sachet frutilla reformulación x 900g
+D|90298-21230701004|939601|Yogur bebible sachet Vainilla reformulación x 900g
+D|62296-21230701002|937485|Ser Natur Botellita Multifruta x 190g
+D|23853-21230701003|937502|Ser Natur Botellita Frutilla x 190g
+D|67803-21230103004|937712|Ser big pot endulzado natural 300 grs
+D|64583-21230103005|937801|Yogur firme preformado Vainilla x190g
+D|64592-21230103006|937802|Yogur firme preformado Frutilla x190g
+D|31903-21230901001-21230901045|938902|Yogur prefo batido con colchón Frutilla Dulce x 175g
+D|66546-21230103008|939712|Ser Protein Prefo Natural x175g
+D|66556-21230103009|939770|Ser Protein Prefo Frutos Rojos x175g
+D|66607-21230701007|939841|Ser Protein Botellita Frutilla y Arándanos x190g
+D|66618-21230701006|939801|Ser Protein Botellita Vainilla x190g
+D|67825-21230303001|939300|Yogur batido con cereales cornflakes x 166g
+D|53044-21230103007|939212|Yogur Ser Natural Sin Endulzar x 175g
+D|46181-21260116003|640011|Postre Ser FFS Flan x 190g (95g X 2)
+D|46262-21260116002|640010|Postre Ser FFS Chocolate x 190g (95g X 2)
+D|46256-21260116001|640009|Postre Ser FFS DDL x 190g (95g X 2)
+D|9818-21260101003|913816|Postre preformado vainilla c/ chocobombas x 118g
+D|24450-21260101004|913901|Postre preformado vainilla c/ rocklets x 120g
+D|39112-21260101005|914001|Postre Preformado Vainilla x 120g
+D|45361-21260101002|640014|Postre SNT FFS DDL x 190g (95g x 2)
+D|46165-21260101001|640013|Postre SNT FFS Vainilla x 190g (95g x 2)
+D|41371-21140105002|964001|Leche plant based Almendra Vainilla sin endulzar x 1L
+D|71058-21140205001|966227|Alimento líquido a base de Coco sin azúcar x 1L
+D|39215-21140105001|963228|Silk Almendra sabor Mocha 1L
+D|18467-21140105003|964107|Alimento líquido a base de almendra Chocolate x 1L
+D|41379-21140105004|966512|Leche plant based Almendra sin endulzar x 1L
+D|41378-21140105005|966519|Leche plant based Almendra endulzada x 1L
+D|87390|659401|Yogurisimo Botellita Vainilla x 190g
+D|56590|659402|Yogurisimo Botellita Frutilla x 190g
+D|7960|654501|Yogurisimo Entero Firme Vainilla x 120g
+D|8030|654502|Yogurisimo Entero Firme Frutilla x 120g
+D|63427|654601|Yogurisimo firme prefo Vainilla x190g
+D|8042|654602|Yogurisimo firme prefo Frutilla x190g
+D|62957|655001|Yogurísimo Bebible Vainilla 900g
+D|62959|655002|Yogurísimo Bebible Frutilla 900g
+D|62982|655005|Yogurísimo Bebible Banana 900g
+D|34940|659612|Yogurísimo Bebible Natural 900g
+D|15536-21220173006|656112|Prefo Batido Natural x 190g Sin Endulzar
+D|15688-21220173004|656001|YSS Prefo Batido x 140g Vainilla
+D|15733-21220173005|656002|YSS Prefo Batido x 140g Frutilla
+D|15734-21220173007|656119|YSS Prefo Batido Natural x 190g Endulzado
+D|15742|656222|YSS Prefo Batido con topping azucarados x 166g
+D|15747-5424|656300|Yogurísimo Griego con granola 168gr
+D|15748-21220173008|656412|Big Pot x 300g Sin Endulzar
+D|15750-21220173009|656419|Big Pot x 300g Endulzado
+D|15752-21220173010|656502|Yogurísimo Griego Frutillas a la crema x 125g
+D|15753-21220173011|656541|Yogurísimo Griego Arándanos x 125g
+D|6581-21220759002|610044|Yogurísimo Griego Bebible Frutilla 900g
+D|6586|610050|Yogurísimo Griego Bebible Natural 900g
+D|6588-21220759001|610043|Yogurísimo Griego Bebible Vainilla 900g
+D|6604|610045|Yogurísimo Griego Bebible Banana 900g
+D|6607-21220173002|610041|Yogurísimo Griego Firme Vainilla 180g
+D|6718-21220173003|610042|Yogurísimo Griego Firme Frutilla 180g
+D|6727-21220173001|610039|Yogurísimo Griego Firme Natural 180g
+D|6731-21220759003|610051|Yogurísimo Griego Botellita Vainilla 190g
+D|6782-21220759004|610052|Yogurísimo Griego Botellita Frutilla 190g
+D|21220329001|610036|Yogurísimo Griego con topping cereales 166g
+D||610048|Yogurísimo Griego Sachet Vainilla 1100g
+D||610049|Yogurísimo Griego Sachet Frutilla 1100g
+D|21230103001|640021|Ser Protein Batido Vanilla Caramel 175 g
+D|21230701001|640020|Ser Protein Botellita Banana 190 g
+D||608600|Casancrem Sachetón 4kg
+D||640019|Casancrem Sachetón 2kg`;
+
+// ==PURE-START==
+// Cencosud: "21220910.7" = artículo (8 dígitos) + variante. En el interno de 11 dígitos la variante va con 3 cifras (007).
+// La lista de origen muestra un solo decimal, así que "x.1" puede ser 1, 10, 11… 19: se registran todas y, si coinciden varios productos, la app pide elegir.
+function expandInts(list){
+  const out=[]; const add=v=>{ if(!out.includes(v)) out.push(v); };
+  for(const t of list){
+    const m=/^(\d{8})\.(\d)$/.exec(t);
+    if(!m){ add(t); continue; }
+    const d=+m[2];
+    add(m[1]+String(d).padStart(3,'0'));
+    for(let k=0;k<10;k++) add(m[1]+String(d*10+k).padStart(3,'0'));
+  }
+  return out;
+}
+
+const UNITS={cero:0,un:1,uno:1,una:1,dos:2,tres:3,cuatro:4,cinco:5,seis:6,siete:7,ocho:8,nueve:9};
+const TEENS={diez:10,once:11,doce:12,trece:13,catorce:14,quince:15,dieciseis:16,diecisiete:17,dieciocho:18,diecinueve:19,veinte:20,veintiuno:21,veintiun:21,veintidos:22,veintitres:23,veinticuatro:24,veinticinco:25,veintiseis:26,veintisiete:27,veintiocho:28,veintinueve:29};
+const TENS={treinta:30,cuarenta:40,cincuenta:50,sesenta:60,setenta:70,ochenta:80,noventa:90};
+const HUNDS={cien:100,ciento:100,doscientos:200,trescientos:300,cuatrocientos:400,quinientos:500,seiscientos:600,setecientos:700,ochocientos:800,novecientos:900};
+const SEPS=new Set(['cantidad','cantidades','por','x','unidades','unidad','cajas','caja','bultos','kilos','kilo','kg']);
+const BREAKS=new Set(['siguiente','proximo','otro','otra','listo']);
+
+function norm(s){
+  s=String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  s=s.replace(/\b(\d{2,3})((?:\.\d{3})+)\b/g,(m,a,b)=>a+b.replace(/\./g,'')); // 63.199 -> 63199
+  s=s.replace(/(\d),(\d)/g,'$1.$2');                                          // 3,5 -> 3.5
+  s=s.replace(/(\d)\s*[x×*]\s*(\d)/g,'$1 por $2');                            // 63199x12
+  s=s.replace(/[^a-z0-9.\s]/g,' ').replace(/\.(?!\d)/g,' ').replace(/(?<!\d)\./g,' ');
+  return s.replace(/\s+/g,' ').trim();
+}
+
+function toItems(tokens){
+  const items=[]; let cur=null;
+  const flush=()=>{ if(cur){ items.push({t:'num',kind:'w',v:String(cur.total+cur.cur)}); cur=null; } };
+  const start=()=>{ if(!cur) cur={total:0,cur:0,last:null}; };
+  for(let i=0;i<tokens.length;i++){
+    const w=tokens[i];
+    if(/^\d+(\.\d+)?$/.test(w)){ flush(); items.push({t:'num',kind:'d',v:w}); continue; }
+    if(SEPS.has(w)){ flush(); items.push({t:'sep'}); continue; }
+    if(w==='coma'||w==='punto'){ flush(); items.push({t:'dot'}); continue; }
+    if(w in HUNDS){ if(cur&&cur.last!=='m') flush(); start(); cur.cur+=HUNDS[w]; cur.last='h'; continue; }
+    if(w in TEENS){ if(cur&&cur.last!=='h'&&cur.last!=='m') flush(); start(); cur.cur+=TEENS[w]; cur.last='te'; continue; }
+    if(w in TENS){ if(cur&&cur.last!=='h'&&cur.last!=='m') flush(); start(); cur.cur+=TENS[w]; cur.last='t'; continue; }
+    if(w==='y'){ if(cur&&cur.last==='t') cur.last='y'; continue; }
+    if(w==='mil'){ start(); cur.total+=(cur.cur||1)*1000; cur.cur=0; cur.last='m'; continue; }
+    if(w in UNITS){
+      const v=UNITS[w];
+      if(v>0&&cur&&(cur.last==='y'||cur.last==='h'||cur.last==='m')){ cur.cur+=v; cur.last='u'; continue; }
+      if(v>0&&tokens[i+1]==='mil'){ flush(); start(); cur.cur=v; cur.last='u'; continue; }
+      flush(); items.push({t:'num',kind:'w',v:String(v)}); continue;
+    }
+    flush();
+  }
+  flush();
+  return items;
+}
+
+function groupItems(items){
+  const out=[];
+  for(let i=0;i<items.length;i++){
+    const it=items[i];
+    if(it.t==='dot'){
+      const prev=out[out.length-1], next=items[i+1];
+      if(prev&&prev.t==='num'&&next&&next.t==='num'){ prev.v+='.'+next.v; prev.kind='d'; i++; }
+      continue;
+    }
+    const prev=out[out.length-1];
+    if(it.t==='num'&&it.kind==='w'&&prev&&prev.t==='num'&&prev.kind==='w'){ prev.v+=it.v; continue; }
+    out.push({...it});
+  }
+  return out;
+}
+
+function parseQty(s){
+  if(s==null||s==='') return null;
+  if(!/^\d+(\.\d+)?$/.test(s)) return null;
+  const n=Number(s); return isNaN(n)?null:n;
+}
+
+function parseLine(tokens,has){
+  const items=groupItems(toItems(tokens));
+  const sepIdx=items.findIndex(i=>i.t==='sep');
+  const nums=items.filter(i=>i.t==='num');
+  if(!nums.length) return null;
+  if(sepIdx>=0){
+    const before=items.slice(0,sepIdx).filter(i=>i.t==='num');
+    const after=items.slice(sepIdx+1).filter(i=>i.t==='num');
+    const code=before.map(i=>i.v).join('').replace(/\D/g,'');
+    const qty=after.length?parseQty(after.map(i=>i.v).join('')):null;
+    if(!code&&qty==null) return null;
+    return {code,qty};
+  }
+  if(nums.length>=2){
+    const last=nums[nums.length-1];
+    const allBut=nums.slice(0,-1).map(i=>i.v).join('').replace(/\D/g,'');
+    const first=nums[0].v.replace(/\D/g,'');
+    let code=nums.length>2?allBut:first;
+    if(nums.length>2&&!has(allBut)&&has(first)) code=first;
+    return {code,qty:parseQty(last.v)};
+  }
+  const s=nums[0].v.replace(/\D/g,'');
+  if(!s) return null;
+  if(has(s)) return {code:s,qty:null};
+  for(let k=s.length-1;k>=3;k--){
+    const pre=s.slice(0,k), suf=s.slice(k);
+    if(suf.length<=4&&has(pre)) return {code:pre,qty:parseQty(suf)};
+  }
+  return {code:s,qty:null};
+}
+
+function parseUtterance(text,has){
+  const toks=norm(text).split(' ').filter(Boolean);
+  const lines=[]; let buf=[];
+  for(const t of toks){ if(BREAKS.has(t)){ lines.push(buf); buf=[]; } else buf.push(t); }
+  lines.push(buf);
+  return lines.filter(l=>l.length).map(l=>parseLine(l,has)).filter(Boolean);
+}
+
+function simKey(s){ return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[\s.]/g,'').slice(0,22); }
+
+function buildIndex(rows,customs){
+  const byInterno=new Map(), bySku=new Map(), all=[];
+  const addE=(e)=>{
+    all.push(e);
+    for(const i of e.internos){
+      if(!byInterno.has(i)) byInterno.set(i,[]);
+      const arr=byInterno.get(i);
+      if(!arr.some(x=>x.sku===e.sku)) arr.push({...e,interno:i});
+    }
+    const k=e.sku.replace(/^0+/,'');
+    if(!bySku.has(k)) bySku.set(k,[]);
+    const arr2=bySku.get(k), key=simKey(e.desc);
+    if(!arr2.some(x=>simKey(x.desc)===key)) arr2.push({...e,interno:e.internos[0]||''});
+  };
+  for(const ln of rows.split('\n')){
+    const p=ln.split('|'); if(p.length<4) continue;
+    addE({co:p[0].trim(),internos:expandInts(p[1].trim().split('-').filter(Boolean)),sku:p[2].trim(),desc:p.slice(3).join('|').trim()});
+  }
+  for(const c of (customs||[])) addE({co:'X',internos:[String(c.interno)],sku:String(c.sku),desc:c.desc||'(manual)'});
+  return {byInterno,bySku,all};
+}
+
+function ed1(a,b){
+  if(a===b) return true;
+  if(Math.abs(a.length-b.length)>1) return false;
+  let i=0; while(i<a.length&&i<b.length&&a[i]===b[i]) i++;
+  if(a.length===b.length) return a.slice(i+1)===b.slice(i+1);
+  if(a.length>b.length) return a.slice(i+1)===b.slice(i);
+  return b.slice(i+1)===a.slice(i);
+}
+
+// mismo artículo (8 primeros dígitos) con otra referencia: se ofrece para que el usuario verifique
+function artMatch(idx,c){
+  const out=[];
+  for(const [k,arr] of idx.byInterno) if(k.length===11&&k.slice(0,8)===c.slice(0,8)) for(const e of arr) out.push(e);
+  return uniqBySku(out);
+}
+function lookup(code,idx){
+  const c=String(code||'').replace(/\D/g,'');
+  if(!c) return {status:'nf',cands:[],sugg:[]};
+  const a=idx.byInterno.get(c);
+  if(a&&a.length) return {status:a.length>1?'ambig':'ok',cands:a,via:'interno',sugg:[]};
+  const b=idx.bySku.get(c.replace(/^0+/,''));
+  if(b&&b.length) return {status:b.length>1?'ambig':'ok',cands:b,via:'sku',sugg:[]};
+  if(/^\d{11}$/.test(c)){ const m=artMatch(idx,c); if(m.length) return {status:m.length>1?'ambig':'ok',cands:m,via:'articulo',sugg:[]}; }
+  const sugg=[];
+  for(const k of idx.byInterno.keys()){
+    if(sugg.length>=6) break;
+    if(ed1(k,c)||(c.length>=5&&k.length>c.length&&k.endsWith(c))) sugg.push(k);
+  }
+  return {status:'nf',cands:[],sugg};
+}
+
+
+// ---- lectura de la columna de códigos (2.ª pasada solo con dígitos) ----
+// lines: [{words:[{t,x0,y0,x1,y1}]}]; devuelve true si cambió algún código
+function codeLinesOf(lines){
+  const out=[];
+  for(const l of lines){ if(!l.words||l.words.length<2) continue; const w=l.words[0], t=fixTok(String(w.t)); if(/^\d{4,7}$/.test(t)) out.push({l,w,t}); }
+  return out;
+}
+function mergeCodeColumn(lines1,lines2,idx){
+  const a=codeLinesOf(lines1); let n=0;
+  if(a.length<3) return 0;
+  const hs=a.map(c=>c.w.y1-c.w.y0).sort((x,y)=>x-y), h=hs[hs.length>>1]||20;
+  const b=[]; for(const l of lines2){ if(!l.words||!l.words.length) continue; const w=l.words[0], t=String(w.t).replace(/\D/g,''); if(/^\d{4,7}$/.test(t)) b.push({w,t,y:(w.y0+w.y1)/2}); }
+  for(const c of a){
+    const y=(c.w.y0+c.w.y1)/2; let best=null, bd=1e9;
+    for(const q of b){ const d=Math.abs(q.y-y); if(d<bd){ bd=d; best=q; } }
+    if(!best||bd>0.7*h||best.t===c.t) continue;
+    const in1=idx.byInterno.has(c.t)||idx.bySku.has(c.t.replace(/^0+/,'')), in2=idx.byInterno.has(best.t)||idx.bySku.has(best.t.replace(/^0+/,''));
+    if(in2&&!in1){ c.w.t=best.t; n++; }
+    else if(!in1&&!in2&&best.t.length===5&&c.t.length!==5){ c.w.t=best.t; n++; }
+  }
+  return n;
+}
+
+// ---- fotos de hoja entera: se lee por franjas y se unen los renglones (los que se repiten por el solape se quedan con la mejor lectura) ----
+// items: [{l:{words:[...]}, yc, cen, h}]  yc = centro vertical absoluto, cen = qué tan al centro de su franja estaba (0..1)
+function mergeBandLines(items){
+  const a=items.slice().sort((p,q)=>p.yc-q.yc), out=[];
+  for(const it of a){
+    const last=out[out.length-1];
+    if(last&&Math.abs(it.yc-last.yc)<=0.9*Math.max(it.h,last.h,8)){ if(it.cen>last.cen) out[out.length-1]=it; }
+    else out.push(it);
+  }
+  return out.map(x=>x.l);
+}
+
+// Si el catálogo no trae el % de grasa y el papel sí, se usa el detalle del papel (queda marcado en la tarjeta).
+function hasMeas(s){ return /\d\s*[.,]?\d*\s*(%|kgs?\b|kilos?\b|grs?\b|gramos?\b|g\b|cc\b|c\.c\b|cm3|cm³|cm\b|ml\b|lts?\b|litros?\b|l\b)/i.test(String(s||'')); }
+function pctDesc(raw){
+  const t=String(raw||'').trim().split(/\s+/); let q=-1;
+  for(let i=1;i<t.length;i++){ if(/^\d{1,4}[.,]\d{2}$/.test(t[i])){ q=i; break; } }
+  if(q<0) return '';
+  const d=[]; for(let i=q+1;i<t.length;i++){ if(/^\d{3,}[.,]\d{2,3}$/.test(t[i])) break; d.push(t[i]); }
+  const s=d.join(' ').replace(/\s+/g,' ').trim();
+  if(!hasMeas(s)) return '';
+  return s.toLowerCase().replace(/(^|[\s.])([a-záéíóúñ])/g,(m,a,b)=>a+b.toUpperCase());
+}
+function textFromLines(lines){ return lines.map(l=>(l.words||[]).map(w=>w.t).join(' ')).join('\n'); }
+
+function fmtQty(q){ if(q==null||q==='') return ''; return String(Math.round(q*1000)/1000); }
+
+function fixTok(t){
+  t=t.replace(/[|=_"'`´“”\[\]{}()<>;:]+/g,'').replace(/^[^0-9A-Za-zÁÉÍÓÚÜáéíóúüñÑ]+|[^0-9A-Za-zÁÉÍÓÚÜáéíóúüñÑ]+$/g,'').replace(/([.,\-])[.,\-]+/g,'$1');
+  if(/^[0-9OoIl]{3,}$/.test(t)&&(t.match(/\d/g)||[]).length*2>=t.length) t=t.replace(/[Oo]/g,'0').replace(/[Il]/g,'1');
+  return t;
+}
+function numTok(t){
+  if(/^\d+$/.test(t)) return t;
+  const m=/^(\d+)[.,\-](\d{1,3})$/.exec(t);
+  return m?m[1]+'.'+m[2]:null;
+}
+const hasLetters=t=>/[A-Za-zÁÉÍÓÚÜáéíóúüñÑ]{2,}/.test(t);
+
+const STOP=new Set(['gr','grs','g','un','nvo','de','la','el','con','sin','c','x','prob','ml','lt','l','y','s','a']);
+function dtoks(str){
+  return norm(str).split(' ').map(t=>t.replace(/^(\d+)(?:g|gr|grs|ml|l|lt|kg|cm3|un)$/,'$1')).filter(t=>t.length>=2&&!STOP.has(t));
+}
+function tokEq(a,b){
+  if(a===b) return true;
+  if(a.length>=5&&b.length>=5&&ed1(a,b)) return true;
+  if(a.length>=4&&b.length>=4&&(a.startsWith(b)||b.startsWith(a))) return true;
+  return false;
+}
+let DFMAP=null, DFN=1;
+function dfBuild(idx){
+  DFMAP=new Map(); DFN=Math.max(1,idx.all.length);
+  for(const e of idx.all){ for(const t of new Set(dtoks(e.desc))) DFMAP.set(t,(DFMAP.get(t)||0)+1); }
+}
+function wt(t){ const d=DFMAP&&DFMAP.get(t); return d?Math.log(1+DFN/d):1; }
+function dice(P,C){
+  if(!P.length||!C.length) return 0;
+  const used=new Array(C.length).fill(false); let m=0, sp=0, sc=0;
+  for(const p of P) sp+=wt(p);
+  for(const c of C) sc+=wt(c);
+  for(const p of P){ for(let i=0;i<C.length;i++){ if(!used[i]&&tokEq(p,C[i])){ used[i]=true; m+=(wt(p)+wt(C[i]))/2; break; } } }
+  return 2*m/(sp+sc);
+}
+const entDt=e=>e._dt||(e._dt=dtoks(e.desc));
+const withInt=e=>e.interno?e:{...e,interno:e.internos[0]||''};
+function uniqBySku(arr){
+  const seen=new Set(), out=[];
+  for(const e of arr){ const k=e.sku+'|'+simKey(e.desc); if(!seen.has(k)){ seen.add(k); out.push(e); } }
+  return out;
+}
+function tailMatch(k,t,loose){
+  if(k.length<t.length) return false;
+  const tail=k.slice(-t.length);
+  if(!loose) return tail===t&&k.length>t.length;          // las últimas cifras coinciden (se cortaron las primeras)
+  return t.length>=4&&tail!==t&&ed1(tail,t);              // una cifra mal leída
+}
+function detectCo(text){
+  const t=' '+norm(text)+' ';
+  if(t.includes(' danone ')) return 'D';
+  if(t.includes(' mastellone ')||t.includes(' la serenisima s a ')) return 'M';
+  return null;
+}
+
+function parseOcrText(text,idx,opts){
+  opts=opts||{};
+  const co=opts.co||null;
+  const poolOk=e=>!co||e.co===co||e.co==='X';
+  if(!DFMAP||DFN!==Math.max(1,idx.all.length)) dfBuild(idx);
+  const items=[];
+  for(const rawLine of String(text).split(/\r?\n/)){
+    const raw=rawLine.trim(); if(raw.length<4) continue;
+    const toks=raw.split(/\s+/).map(fixTok).filter(Boolean);
+
+    // remito Cencosud: artículo (8) + ref (1-3 cifras)
+    let cenco=-1, ccode=null;
+    for(let i=0;i<toks.length-1&&cenco<0;i++){
+      if(/^\d{8}$/.test(toks[i])&&/^\d{1,3}$/.test(toks[i+1])){
+        const c=toks[i]+toks[i+1].padStart(3,'0');
+        if(idx.byInterno.has(c)||artMatch(idx,c).length){ cenco=i+1; ccode=c; }
+      }
+    }
+    if(cenco>=0){
+      let last=-1, qty=null;
+      for(let j=cenco+1;j<toks.length;j++) if(hasLetters(toks[j])) last=j;
+      if(last>=0) for(let j=last+1;j<toks.length;j++){ const n=numTok(toks[j]); if(n&&n.length<9){ qty=Number(n); break; } }
+      const exa=idx.byInterno.has(ccode), cs=exa?uniqBySku(idx.byInterno.get(ccode)):artMatch(idx,ccode);
+      items.push({code:ccode,qty,raw,how:'exact',approx:!exa,lowmatch:false,cands:cs});
+      continue;
+    }
+
+    // renglón común: C.I.  Cant.  Detalle
+    const fl=toks.findIndex(hasLetters);
+    const zoneEnd=fl<0?toks.length:fl;
+    let qi=-1;
+    let qv=null;
+    for(let i=0;i<zoneEnd;i++){
+      if(/^\d{1,5}[.,\-]\d{2,3}$/.test(toks[i])){ qi=i; qv=Number(numTok(toks[i])); break; }
+      if(/^\d{1,3}$/.test(toks[i])&&i+1<zoneEnd&&/^[0O]{2}$/.test(toks[i+1])&&i>0){ qi=i; qv=Number(toks[i]); break; }       // "2 00"
+    }
+    let qty=null, codeToks;
+    if(qi<0&&zoneEnd>=2&&/^[1-9]00$/.test(toks[zoneEnd-1])&&/^\d/.test(toks[0])){ qi=zoneEnd-1; qv=Number(toks[qi].slice(0,-2)); }   // "400" = 4,00 sin el punto
+    if(qi>=0){
+      qty=qv; codeToks=toks.slice(0,qi).filter(t=>/^\d{3,11}$/.test(t));
+    } else {
+      const nums=toks.slice(0,zoneEnd).filter(t=>numTok(t));
+      codeToks=nums.filter(t=>/^\d{3,11}$/.test(t)).slice(0,1);
+      if(nums.length>=2&&/^\d{3,11}$/.test(nums[0])){ const n=numTok(nums[1]); if(n&&n.replace('.','').length<=6) qty=Number(n); }
+    }
+    if(qty!=null&&(isNaN(qty)||qty<=0||qty>=1000)) qty=null;
+    const P=dtoks(toks.slice(zoneEnd).join(' '));
+
+    let cands=[], how='', dtop=0;
+    for(const t of codeToks){
+      const ex=(idx.byInterno.get(t)||[]).filter(poolOk);
+      if(ex.length){ cands=uniqBySku(ex); how='exact'; break; }
+    }
+    if(!cands.length) for(const t of codeToks){
+      for(const loose of [false,true]){
+        const out=[];
+        for(const [k,arr] of idx.byInterno) if(tailMatch(k,t,loose)) for(const e of arr) if(poolOk(e)) out.push(e);
+        if(out.length){ cands=uniqBySku(out); how='tail'; break; }
+      }
+      if(cands.length) break;
+    }
+    if(!cands.length) for(const t of codeToks){
+      if(t.length<4) continue;
+      const sk=(idx.bySku.get(t.replace(/^0+/,''))||[]).filter(poolOk);
+      if(sk.length){ cands=uniqBySku(sk); how='sku'; break; }
+    }
+    if(!cands.length) for(const t of codeToks){          // una cifra mal leída (mismo largo): solo si hay una única opción
+      if(t.length<5||t.length>7) continue;
+      const out=[];
+      for(const [k,arr] of idx.byInterno) if(k.length===t.length&&k!==t&&ed1(k,t)) for(const e of arr) if(poolOk(e)) out.push(e);
+      const u=uniqBySku(out);
+      if(u.length===1){ cands=u; how='near'; break; }
+    }
+    const score=e=>dice(P,entDt(e));
+    if(cands.length>1&&P.length>=2){
+      cands.sort((a,b)=>score(b)-score(a));
+      const s0=score(cands[0]), s1=score(cands[1]);
+      if(s0>=0.25&&s0-s1>=0.08) cands=[cands[0]];
+    }
+    if(!cands.length&&P.length>=2){
+      const pool=uniqBySku(idx.all.filter(poolOk)).map(e=>({e:withInt(e),s:dice(P,entDt(e))})).sort((a,b)=>b.s-a.s);
+      const top=pool.slice(0,5).filter(x=>x.s>=0.25);
+      if(top.length){
+        how='desc'; dtop=top[0].s;
+        cands=(top[0].s>=0.75&&(top.length<2||top[0].s-top[1].s>=0.15))?[top[0].e]:top.map(x=>x.e);
+      }
+    }
+    if(!cands.length&&qty==null) continue;               // no parece un renglón de producto
+    if(how==='desc'&&qty==null&&!codeToks.length&&dtop<0.6) continue;   // texto suelto del papel, no un renglón
+    const one=cands.length===1?cands[0]:null;
+    const lowmatch=!!(one&&how!=='desc'&&P.length>=2&&score(one)<0.15);
+    items.push({code:one?(one.interno||one.sku):(codeToks[0]||''),qty,raw,how,approx:(how==='tail'||how==='desc'||how==='near'),lowmatch,bigqty:(qty!=null&&qty>=100),cands});
+  }
+  return {items};
+}
+
+function detectSuc(text,sucs){
+  const t=' '+norm(text)+' ';
+  const byNum=sucs.filter(s=>t.includes(' '+s.n+' '));
+  if(byNum.length===1) return byNum[0];
+  if(byNum.length>1) return null;
+  const byKw=sucs.filter(s=>(s.kw||[]).some(k=>t.includes(' '+k+' ')));
+  return byKw.length===1?byKw[0]:null;
+}
+// ---- generador de PDF propio (sin librerías, funciona sin internet) ----
+const HW=[278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584];
+const pdfBase=ch=>{ const c=ch.normalize('NFD').charCodeAt(0); return c; };
+function pdfW(s,size,bold){ let w=0; for(const ch of String(s)){ const c=pdfBase(ch); w+=(c>=32&&c<=126?HW[c-32]:556); } return w*size/1000*(bold?1.06:1); }
+function pdfHex(s){ const M={'–':0x96,'—':0x97,'’':0x92,'‘':0x91,'“':0x93,'”':0x94,'…':0x85,'•':0x95,'€':0x80};
+  let o=''; for(const ch of String(s)){ let c=M[ch]!==undefined?M[ch]:ch.charCodeAt(0); if(c>255) c=63; o+=(c<16?'0':'')+c.toString(16); } return '<'+o+'>'; }
+function pdfWrap(s,size,maxw){
+  const out=[]; let cur='';
+  for(let w of String(s).split(/\s+/).filter(Boolean)){
+    while(pdfW(w,size)>maxw){ let k=1; while(k<w.length&&pdfW(w.slice(0,k+1),size)<=maxw) k++; if(cur){out.push(cur);cur='';} out.push(w.slice(0,k)); w=w.slice(k); }
+    const t=cur?cur+' '+w:w;
+    if(pdfW(t,size)<=maxw) cur=t; else { if(cur) out.push(cur); cur=w; }
+  }
+  if(cur) out.push(cur); return out.length?out:[''];
+}
+function pdfBuild(d){
+  const PW=595.28, PH=841.89, M=34, W=PW-2*M;
+  const f=n=>(Math.round(n*100)/100).toString();
+  let pages=[], cs=[];
+  const newPage=()=>{ cs=[]; pages.push(cs); };
+  const T=(x,y,s,size,bold)=>{ cs.push('BT /'+(bold?'F2':'F1')+' '+f(size)+' Tf '+f(x)+' '+f(y)+' Td '+pdfHex(s)+' Tj ET'); };
+  const TR=(xr,y,s,size,bold)=>T(xr-pdfW(s,size,bold),y,s,size,bold);
+  const R=(x,y,w,h,fill)=>{ if(fill!==undefined) cs.push(f(fill)+' g '+f(x)+' '+f(y)+' '+f(w)+' '+f(h)+' re f 0 g'); cs.push('0.6 w '+f(x)+' '+f(y)+' '+f(w)+' '+f(h)+' re S'); };
+  const cw=[78,56,56,W-190];
+  const cx=[M,M+cw[0],M+cw[0]+cw[1],M+cw[0]+cw[1]+cw[2]];
+  newPage(); let y=PH-M;
+  const tt='PARTE DE DEVOLUCIONES'; T(PW/2-pdfW(tt,16,true)/2,y-14,tt,16,true); y-=30;
+  // datos
+  const mh=58; R(M,y-mh,W,mh);
+  T(M+6,y-15,'Sucursal: ',10,true); T(M+6+pdfW('Sucursal: ',10,true),y-15,d.sucName||'',10);
+  T(M+6,y-30,'N° de Cliente: ',10,true); T(M+6+pdfW('N° de Cliente: ',10,true),y-30,d.suc||'',10);
+  const q=W/3, lab=[['Reparto: ',d.rep],['Cuenta: ',d.cta],['N° documento: ',d.doc]];
+  lab.forEach((p,i)=>{ const x=M+6+i*q; T(x,y-48,p[0],10,true); T(x+pdfW(p[0],10,true),y-48,p[1]||'',10); });
+  const fx=M+W-110; T(fx,y-15,'Fecha: ',10,true); T(fx+pdfW('Fecha: ',10,true),y-15,d.fec||'',10);
+  y-=mh+10;
+  const head=()=>{ R(M,y-16,W,16,0.9); cw.forEach((w,i)=>{ if(i) cs.push('0.6 w '+f(cx[i])+' '+f(y)+' m '+f(cx[i])+' '+f(y-16)+' l S'); });
+    T(cx[0]+4,y-11.5,'C.I.',9,true); T(cx[1]+4,y-11.5,'SKU',9,true); TR(cx[2]+cw[2]-4,y-11.5,'CANTIDAD',9,true); T(cx[3]+4,y-11.5,'DESCRIPCIÓN',9,true); y-=16; };
+  head();
+  let ri=0;
+  for(const r of d.rows){
+    const dl=pdfWrap(r.desc,9,cw[3]-8), h=dl.length*11+5;
+    if(y-h<M+16){ newPage(); y=PH-M; head(); }
+    R(M,y-h,W,h,(ri++%2)?0.93:undefined); cw.forEach((w,i)=>{ if(i) cs.push('0.6 w '+f(cx[i])+' '+f(y)+' m '+f(cx[i])+' '+f(y-h)+' l S'); });
+    T(cx[0]+4,y-11,r.ci,9); T(cx[1]+4,y-11,r.sku,9); TR(cx[2]+cw[2]-4,y-11,r.qty,9);
+    dl.forEach((t,i)=>T(cx[3]+4,y-11-i*11,t,9)); y-=h;
+  }
+  // pie
+  const ph=52; if(y-10-ph<M+16){ newPage(); y=PH-M; } y-=10;
+  R(M,y-ph,W,ph);
+  T(M+6,y-18,'Cantidad ítems: ',10,true); T(M+6+pdfW('Cantidad ítems: ',10,true),y-18,String(d.items),10);
+  T(M+W/2,y-18,'Cantidad de unidades: ',10,true); T(M+W/2+pdfW('Cantidad de unidades: ',10,true),y-18,String(d.units),10);
+  T(M+6,y-38,'N° sticker LLSSA: ',10,true); T(M+6+pdfW('N° sticker LLSSA: ',10,true),y-38,d.llssa||'',10);
+  T(M+W/2,y-38,'N° sticker MILLAN: ',10,true); T(M+W/2+pdfW('N° sticker MILLAN: ',10,true),y-38,d.mill||'',10);
+  // numeración
+  pages.forEach((p,i)=>{ const s='Página '+(i+1)+' de '+pages.length; p.push('BT /F1 8 Tf '+f(PW/2-pdfW(s,8)/2)+' '+f(M-14)+' Td '+pdfHex(s)+' Tj ET'); });
+  // objetos
+  const objs=[]; const n=pages.length;
+  objs[1]='<< /Type /Catalog /Pages 2 0 R >>';
+  objs[2]='<< /Type /Pages /Kids ['+pages.map((_,i)=>(5+i*2)+' 0 R').join(' ')+'] /Count '+n+' >>';
+  objs[3]='<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>';
+  objs[4]='<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>';
+  pages.forEach((p,i)=>{ const body=p.join('\n');
+    objs[5+i*2]='<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+PW+' '+PH+'] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents '+(6+i*2)+' 0 R >>';
+    objs[6+i*2]='<< /Length '+body.length+' >>\nstream\n'+body+'\nendstream'; });
+  let out='%PDF-1.4\n', off=[];
+  for(let i=1;i<objs.length;i++){ off[i]=out.length; out+=i+' 0 obj\n'+objs[i]+'\nendobj\n'; }
+  const xr=out.length; out+='xref\n0 '+objs.length+'\n0000000000 65535 f \n';
+  for(let i=1;i<objs.length;i++) out+=String(off[i]).padStart(10,'0')+' 00000 n \n';
+  out+='trailer\n<< /Size '+objs.length+' /Root 1 0 R >>\nstartxref\n'+xr+'\n%%EOF';
+  const u=new Uint8Array(out.length); for(let i=0;i<out.length;i++) u[i]=out.charCodeAt(i)&255; return u;
+}
+
+// ==PURE-END==
+
+// Números de cliente por sucursal
+const SUCURSALES=[
+  {grupo:'MILLAN',nombre:'Central',n:'80000339',kw:['central']},
+  {grupo:'MILLAN',nombre:'Olascoaga',n:'30005128',kw:['olascoaga']},
+  {grupo:'MILLAN',nombre:'M. Fierro',n:'30005092',kw:['fierro']},
+  {grupo:'MILLAN',nombre:'Roca',n:'30005129',kw:['roca','trome']},
+  {grupo:'MILLAN',nombre:'Bosque',n:'30005201',kw:['bosque','peru']},
+  {grupo:'CENCOSUD',nombre:'San Miguel',n:'30000719',kw:['san miguel']},
+  {grupo:'CENCOSUD',nombre:'Independencia',n:'30000609',kw:['independencia']}
+];
+
+(function(){
+  const $=id=>document.getElementById(id);
+  const CO={M:'Mastellone',D:'Danone',X:'Manual'};
+  let customs=[], lines=[], meta={}, idx;
+  const ls={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+  const todayStr=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+  customs=ls.get('bsv_custom',[]); lines=ls.get('bsv_lines',[]); meta=ls.get('bsv_meta',{});
+  meta.fec=todayStr();   // la fecha siempre arranca en el día de hoy
+  function reindex(){ idx=buildIndex(CATALOG,customs); $('cat').textContent='Catálogo: '+idx.bySku.size+' productos · Mastellone + Danone'; }
+  reindex();
+  const has=c=>idx.byInterno.has(c)||idx.bySku.has(c.replace(/^0+/,''));
+  const save=()=>ls.set('bsv_lines',lines);
+  const saveMeta=()=>ls.set('bsv_meta',meta);
+  const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  // ---- datos del parte ----
+  const FIELDS={fec:'f_fec',rep:'f_rep',cta:'f_cta',doc:'f_doc',llssa:'f_llssa',mill:'f_mill'};
+  const sel=$('f_suc'), other=$('f_suc2');
+  const grupos=[...new Set(SUCURSALES.map(s=>s.grupo))];
+  sel.innerHTML='<option value="">Seleccionar</option>'+grupos.map(g=>'<optgroup label="'+esc(g)+'">'+SUCURSALES.filter(s=>s.grupo===g).map(s=>'<option value="'+esc(s.n)+'">'+esc(s.nombre)+' · '+esc(s.n)+'</option>').join('')+'</optgroup>').join('')+'<option value="otra">Otra (escribir número)</option>';
+  function sucName(){ const s=SUCURSALES.find(x=>String(x.n)===String(meta.suc||'').trim()); return s?s.nombre+' ('+s.grupo+')':''; }
+  function showSuc(){ const n=sucName(); $('sucname').textContent=n?('Sucursal: '+n+' · cliente '+meta.suc):''; }
+  function syncSuc(){
+    const known=SUCURSALES.some(s=>String(s.n)===String(meta.suc));
+    if(!meta.suc){ sel.value=''; other.style.display='none'; }
+    else if(known){ sel.value=meta.suc; other.style.display='none'; }
+    else { sel.value='otra'; other.style.display=''; other.value=meta.suc; }
+    showSuc();
+  }
+  sel.addEventListener('change',()=>{
+    if(sel.value==='otra'){ other.style.display=''; other.focus(); meta.suc=other.value; }
+    else { other.style.display='none'; meta.suc=sel.value; }
+    saveMeta(); showSuc();
+  });
+  other.addEventListener('input',()=>{ meta.suc=other.value; saveMeta(); showSuc(); });
+  for(const k in FIELDS){
+    const el=$(FIELDS[k]); el.value=meta[k]||'';
+    el.addEventListener('input',()=>{ meta[k]=el.value; saveMeta(); });
+  }
+  syncSuc();
+
+  // ---- líneas ----
+  function addLine(code,qty,extra){
+    const r=lookup(code,idx);
+    const l={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),code,qty,cands:r.cands,via:r.via||'',sugg:r.sugg||[],sel:r.cands.length===1?r.cands[0]:null};
+    Object.assign(l,extra||{}); lines.push(l); save(); render(); return l;
+  }
+  function relookup(l){ const r=lookup(l.code,idx); l.cands=r.cands; l.via=r.via||''; l.sugg=r.sugg||[]; l.sel=r.cands.length===1?r.cands[0]:null; }
+
+  function render(){
+    const box=$('list');
+    if(!lines.length){ box.innerHTML='<div class="empty">Todavía no hay productos cargados.<br>Escriba el C.I. y la cantidad arriba.</div>'; $('foot').style.display='none'; return; }
+    let h='';
+    for(const l of lines){
+      const st=l.sel?'ok':(l.cands.length>1?'amb':'nf');
+      h+='<div class="card '+st+'" data-id="'+l.id+'"><div class="top"><span class="int">'+esc(l.code)+'</span>'+(l.sel?'<span class="chip">'+CO[l.sel.co]+'</span>':'')+(l.via==='sku'?'<span class="chip">buscado como SKU</span>':'')+(l.sel&&l.sel.descSrc?'<span class="chip">detalle del papel (con medida)</span>':'')+(l.via==='articulo'?'<span class="chip" style="border-color:var(--nf)">mismo artículo, verificar referencia</span>':'')+(l.ocr?'<span class="chip">OCR</span>':'')+(l.approx?'<span class="chip">'+(l.how==='desc'?'por descripción':'código corregido')+'</span>':'')+(l.lowmatch?'<span class="chip" style="border-color:var(--nf)">revisar descripción</span>':'')+(l.bigqty?'<span class="chip" style="border-color:var(--nf)">revisar cantidad</span>':'')+'<button class="del" data-act="del" title="Borrar">×</button></div>';
+      if(l.sel){ h+='<div class="sku">'+esc(l.sel.sku)+' <small>SKU</small></div><div class="desc">'+esc(l.sel.desc)+'</div>'; }
+      else if(l.cands.length>1){
+        h+='<div class="warn">'+(l.ocr?'No estoy seguro del producto. Compare con el papel y elija el correcto:':'Este código tiene más de un producto. Elija el correcto:')+'</div><div class="opts">'+l.cands.map((c,i)=>'<button data-act="pick" data-i="'+i+'"><b>'+esc(c.sku)+'</b> · '+esc(c.desc)+'</button>').join('')+'</div>';
+      } else {
+        h+='<div class="warn">No se encontró el código «'+esc(l.code)+'».</div>';
+        if(l.sugg.length) h+='<div class="sugg">'+l.sugg.map(s=>'<button data-act="fix" data-c="'+s+'">¿'+s+'?</button>').join('')+'</div>';
+        h+='<div class="row"><button class="b" data-act="man">Asignar SKU a mano</button></div>';
+      }
+      h+='<div class="q"><button data-act="minus">−</button><input inputmode="decimal" data-act="qty" class="'+(l.qty==null?'miss':'')+'" value="'+fmtQty(l.qty)+'" placeholder="cant."><button data-act="plus">+</button></div>';
+      if(l.qty==null) h+='<div class="warn" style="color:var(--nf)">Falta la cantidad.</div>';
+      if(l.raw) h+='<div class="raw">Leído: '+esc(l.raw)+'</div>';
+      h+='</div>';
+    }
+    box.innerHTML=h; $('foot').style.display='block'; totals();
+  }
+  function sortedLines(){ return lines.slice(); }
+  function toLast(){ setTimeout(()=>{ const c=$('list').lastElementChild; if(c&&c.scrollIntoView) c.scrollIntoView({block:'nearest',behavior:'smooth'}); },60); }
+  const units=()=>lines.filter(l=>l.sel&&l.qty!=null).reduce((a,l)=>a+Number(l.qty),0);
+  const pending=()=>lines.filter(l=>!(l.sel&&l.qty!=null)).length;
+  function totals(){
+    const p=pending();
+    $('tot').innerHTML='Ítems: '+lines.length+' · Unidades: '+fmtQty(units())+(p?'<br><span style="color:var(--nf);font-size:14px">'+p+' sin resolver (SKU o cantidad)</span>':'');
+  }
+  $('list').addEventListener('click',async e=>{
+    const b=e.target.closest('[data-act]'); if(!b) return;
+    const card=b.closest('.card'); const l=lines.find(x=>x.id===card.dataset.id); if(!l) return;
+    const act=b.dataset.act;
+    if(act==='del'){ lines=lines.filter(x=>x!==l); }
+    else if(act==='pick'){ l.sel=l.cands[+b.dataset.i]; }
+    else if(act==='fix'){ l.code=b.dataset.c; relookup(l); }
+    else if(act==='plus'){ l.qty=(Number(l.qty)||0)+1; }
+    else if(act==='minus'){ l.qty=Math.max(0,(Number(l.qty)||0)-1); }
+    else if(act==='man'){
+      const sku=await ask('SKU para el código '+l.code+':',true); if(!sku||!sku.trim()) return;
+      const desc=(await ask('Descripción (opcional):',true,''))||'(manual)';
+      customs.push({interno:l.code,sku:sku.trim(),desc}); ls.set('bsv_custom',customs); reindex();
+      lines.forEach(x=>{ if(!x.sel&&x.code===l.code) relookup(x); });
+    } else return;
+    save(); render();
+  });
+  $('list').addEventListener('change',e=>{
+    if(e.target.dataset.act!=='qty') return;
+    const l=lines.find(x=>x.id===e.target.closest('.card').dataset.id); if(!l) return;
+    l.qty=parseQty(e.target.value.replace(',','.').trim()); save(); render();
+  });
+
+  // ---- carga escrita ----
+  const keyOf=l=>l.sel?('S'+l.sel.co+'|'+l.sel.sku):('C'+l.code);
+  const sumQ=(a,b)=>(a==null&&b==null)?null:(Number(a)||0)+(Number(b)||0);
+  function dupMsg(l,others){
+    const nm=l.sel?(l.sel.sku+' · '+l.sel.desc):('código '+l.code);
+    return 'El código '+l.code+' está repetido ('+nm+').\nCantidades cargadas: '+[l].concat(others).map(x=>x.qty==null?'sin cant.':fmtQty(x.qty)).join(' + ')+''+(others.concat([l]).every(x=>x.qty==null)?'':' = '+fmtQty(others.reduce((a,x)=>sumQ(a,x.qty),l.qty)))+'.\n¿Desea unificarlo en un solo renglón?';
+  }
+  async function addTyped(){
+    const code=$('f_code').value.replace(/\D+/g,''), q=$('f_qty').value.replace(/\D+/g,'');
+    if(!code){ $('f_code').focus(); return; }
+    const qty=q===''?null:Number(q);
+    const r=lookup(code,idx), probe={code,sel:r.cands.length===1?r.cands[0]:null};
+    const k=keyOf(probe), same=lines.filter(x=>keyOf(x)===k||x.code===code);
+    $('f_code').value=''; $('f_qty').value='';
+    if(same.length){
+      const first=same[0];
+      const ok=await ask('El código '+code+' ya está cargado'+(first.sel?' ('+first.sel.sku+' · '+first.sel.desc+')':'')+' con cantidad '+(first.qty==null?'vacía':fmtQty(first.qty))+'.\nSi lo unifica, se suman '+(qty==null?'(sin cantidad nueva)':fmtQty(qty))+' a ese renglón.\n¿Desea unificarlo?',false,'','Sí, unificar','No, dejar aparte');
+      if(ok){ first.qty=sumQ(first.qty,qty); save(); render(); note('Unificado: '+code+' ahora suma '+fmtQty(first.qty)+'.'); $('f_code').focus(); return; }
+    }
+    addLine(code,qty); toLast();
+    $('f_code').focus();
+  }
+  async function checkDups(){
+    const done=new Set(); let n=0;
+    for(;;){
+      const grp={}; lines.forEach(l=>{ if(!done.has(keyOf(l))) (grp[keyOf(l)]=grp[keyOf(l)]||[]).push(l); });
+      const k=Object.keys(grp).find(x=>grp[x].length>1); if(!k) break;
+      done.add(k); const g=grp[k];
+      if(await ask(dupMsg(g[0],g.slice(1)),false,'','Sí, unificar','No, dejar aparte')){
+        g[0].qty=g.slice(1).reduce((a,x)=>sumQ(a,x.qty),g[0].qty);
+        const rm=new Set(g.slice(1).map(x=>x.id)); lines=lines.filter(x=>!rm.has(x.id)); lastIds=lastIds.filter(i=>!rm.has(i)); n++; save(); render();
+      }
+    }
+    if(n) note('Se unificaron '+n+' código(s) repetido(s).');
+  }
+  $('add').onclick=addTyped;
+  $('f_code').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); if($('f_code').value.trim()) $('f_qty').focus(); } });
+  $('f_qty').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); addTyped(); } });
+
+  // ---- hoja impresa ----
+  const fmtFecha=s=>{ const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s||''); return m?m[3]+'/'+m[2]+'/'+m[1]:(s||''); };
+  const blank=s=>(s&&String(s).trim())?esc(s):'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+  function buildSheet(){
+    const sn=sucName();
+    let h='<h2>PARTE DE DEVOLUCIONES</h2><div class="meta">'+
+      '<div><b>Sucursal:</b> '+(sn?esc(sn):blank(''))+'</div>'+
+      '<div><b>Fecha:</b> '+esc(fmtFecha(meta.fec))+'</div>'+
+      '<div><b>N° de Cliente:</b> '+blank(meta.suc)+'</div><div></div>'+
+      '<div><b>Reparto:</b> '+blank(meta.rep)+'</div>'+
+      '<div><b>Cuenta:</b> '+blank(meta.cta)+'</div>'+
+      '<div><b>N° documento:</b> '+blank(meta.doc)+'</div><div></div></div>';
+    h+='<table><thead><tr><th style="width:95px">C.I.</th><th style="width:70px">SKU</th><th class="n" style="width:70px">CANTIDAD</th><th>DESCRIPCIÓN</th></tr></thead><tbody>';
+    for(const l of sortedLines()){
+      h+='<tr><td>'+((l.sel&&!l.sel.interno&&String(l.code)===String(l.sel.sku))?'—':esc(l.code))+'</td><td>'+(l.sel?esc(l.sel.sku):'???')+'</td><td class="n">'+(l.qty==null?'?':fmtQty(l.qty))+'</td><td>'+(l.sel?esc(l.sel.desc):'(sin resolver)')+'</td></tr>';
+    }
+    h+='</tbody></table><div class="pie">'+
+      '<div><b>Cantidad ítems:</b> '+lines.length+'</div><div><b>Cantidad de unidades:</b> '+fmtQty(units())+'</div>'+
+      '<div><b>N° sticker LLSSA:</b> '+blank(meta.llssa)+'</div><div><b>N° sticker MILLAN:</b> '+blank(meta.mill)+'</div></div>';
+    $('sheet').innerHTML=h;
+  }
+  window.addEventListener('beforeprint',buildSheet);
+  $('bprint').onclick=async()=>{
+    const p=pending();
+    if(p&&!(await ask('Hay '+p+' renglón(es) sin SKU o sin cantidad. ¿Imprimir igual?'))) return;
+    buildSheet(); regDoc(); window.print();
+  };
+
+  let lastSaved=null;
+  function showPv(snap){ if(snap){ $('pvp').innerHTML=snap.html; $('pvd').onclick=()=>dl(snap.nm,snap.u,'application/pdf'); } else { buildSheet(); $('pvp').innerHTML=$('sheet').innerHTML; } $('pv').hidden=false; $('pvbody').scrollTop=0; try{ window.scrollTo(0,0); }catch(_){} $('pvx').onclick=()=>{ $('pv').hidden=true; }; }
+  // aviso al terminar de descargar: el PDF queda en Descargas y el botón «Abrir» lo muestra en esta misma pantalla
+  function savedBar(name,type){
+    const pdf=/pdf/i.test(type||'')||/\.pdf$/i.test(name);
+    $('dlokt').textContent=pdf?'✔ PDF descargado: '+name:'✔ Archivo descargado: '+name;
+    $('dlopen').style.display=pdf?'':'none'; $('dlok').hidden=false;
+    $('dlopen').onclick=()=>{ $('dlok').hidden=true; showPv(lastSaved); };
+    $('dlx').onclick=()=>{ $('dlok').hidden=true; };
+  }
+  $('bpdf').onclick=async()=>{
+    const p=pending();
+    if(p&&!(await ask('Hay '+p+' renglón(es) sin SKU o sin cantidad. ¿Descargar igual?'))) return;
+    const u=pdfBuild({suc:meta.suc||'',sucName:sucName(),rep:meta.rep||'',cta:meta.cta||'',doc:meta.doc||'',fec:fmtFecha(meta.fec),
+      rows:sortedLines().map(l=>({ci:(l.sel&&!l.sel.interno&&String(l.code)===String(l.sel.sku))?'—':String(l.code),sku:l.sel?String(l.sel.sku):'???',qty:l.qty==null?'?':fmtQty(l.qty),desc:l.sel?l.sel.desc:'(sin resolver)'})),
+      items:lines.length,units:fmtQty(units()),llssa:meta.llssa||'',mill:meta.mill||''});
+    const nm=docFile()+'.pdf', dc=docClean();
+    if(dc){
+      const x=dmOf(), ex=docs.find(r=>r.key===dc+'-'+x.d+'-'+x.m);
+      if(ex&&!(await ask('El documento '+dc+' del '+x.d+'/'+x.m+' ya está cargado ('+ex.items+' ítems, '+fmtQty(ex.units)+' unidades).\n¿Descargar de nuevo y reemplazar el registro?'))) return;
+    } else if(!(await ask('Falta el N° de documento: el parte no se va a registrar en «Consulta documentos» ni se va a limpiar la pantalla.\n¿Descargar igual?'))) return;
+    buildSheet(); lastSaved={html:$('sheet').innerHTML,nm,u};
+    dl(nm,u,'application/pdf');
+    if(!dc) return;
+    regDoc();
+    lines=[]; lastIds=[]; meta.doc=''; meta.llssa=''; meta.mill=''; meta.suc=''; meta.fec=todayStr();   // reparto y cuenta se recuerdan
+    for(const k of ['doc','llssa','mill','fec']) $(FIELDS[k]).value=meta[k];
+    syncSuc(); save(); saveMeta(); render();
+    note('Parte '+dc+' descargado y registrado. Pantalla lista para un parte nuevo.');
+  };
+
+  // ---- exportar ----
+  const SKUOF=l=>l.sel?l.sel.sku:'???';
+  const DESCOF=l=>l.sel?l.sel.desc:'(sin resolver)';
+  function txt(){
+    const p=(s,n)=>String(s).padEnd(n), sn=sucName();
+    let o='PARTE DE DEVOLUCIONES\n'+
+      'Sucursal: '+(sn||'')+'\nN° de Cliente: '+(meta.suc||'')+'\nReparto: '+(meta.rep||'')+'   Cuenta: '+(meta.cta||'')+
+      '\nN° documento: '+(meta.doc||'')+'\nFecha: '+fmtFecha(meta.fec)+'\n\n';
+    o+=p('C.I.',13)+p('SKU',8)+p('CANT.',7)+'DESCRIPCIÓN\n'+'-'.repeat(60)+'\n';
+    lines.forEach(l=>{ o+=p(l.code,13)+p(SKUOF(l),8)+p(fmtQty(l.qty)||'?',7)+DESCOF(l)+'\n'; });
+    return o+'-'.repeat(60)+'\nCantidad ítems: '+lines.length+'\nCantidad de unidades: '+fmtQty(units())+
+      '\nN° sticker LLSSA: '+(meta.llssa||'')+'\nN° sticker MILLAN: '+(meta.mill||'')+'\n';
+  }
+  function ask(msg,withInput,def,yesL,noL){ return new Promise(res=>{ $('dmsg').textContent=msg; const inp=$('dinp'); inp.hidden=!withInput; inp.value=def||''; $('dyes').textContent=yesL||'Aceptar'; $('dno').textContent=noL||'Cancelar'; $('dlg').hidden=false; try{ window.scrollTo(0,0); }catch(_){} if(withInput) inp.focus();
+    const done=v=>{ $('dlg').hidden=true; $('dyes').onclick=$('dno').onclick=null; res(v); };
+    $('dyes').onclick=()=>done(withInput?inp.value:true); $('dno').onclick=()=>done(withInput?null:false); }); }
+  let noteT=0;
+  function note(t){ const n=$('note'); n.textContent=t; n.hidden=false; clearTimeout(noteT); noteT=setTimeout(()=>{n.hidden=true;},6000); }
+  function dl(name,content,type){ const b=new Blob([content],{type}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=name; document.body.appendChild(a); a.click(); a.remove(); savedBar(name,type); }
+  const stamp=()=>new Date().toISOString().slice(0,16).replace(/[-:T]/g,'');
+  // ---- registro de documentos cargados ----
+  const dmOf=()=>{ const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(meta.fec||''); return m?{d:m[3],m:m[2],y:m[1]}:(()=>{ const t=new Date(); return {d:String(t.getDate()).padStart(2,'0'),m:String(t.getMonth()+1).padStart(2,'0'),y:String(t.getFullYear())}; })(); };
+  const docClean=()=>String(meta.doc||'').trim().replace(/[^\w-]+/g,'');
+  function docFile(){ const dc=docClean(); if(!dc) return 'PARTE_DEVOLUCION_'+stamp(); const x=dmOf(); return dc+'-'+x.d+'-'+x.m; }
+  let docs=ls.get('bsv_docs',[]);
+  const nz=s=>String(s).replace(/^0+(?=\d)/,'');
+  function regDoc(){
+    const dc=docClean(); if(!dc){ note('Sin N° de documento: no se registra en «Consulta documentos».'); return; }
+    const x=dmOf(), key=dc+'-'+x.d+'-'+x.m, prev=docs.findIndex(r=>r.key===key);
+    const rec={key,doc:dc,d:x.d,m:x.m,y:x.y,items:lines.length,units:units(),suc:sucName()||meta.suc||'',cli:meta.suc||'',ts:Date.now(),lines:lines.map(l=>({ci:String(l.code),sku:l.sel?String(l.sel.sku):'',qty:l.qty,desc:l.sel?l.sel.desc:''}))};
+    if(prev>=0) docs[prev]=rec; else docs.push(rec);
+    ls.set('bsv_docs',docs); if(typeof updFri==='function') updFri();
+  }
+  function qDoc(txt){
+    let t=String(txt||'').trim().replace(/\s+/g,''); if(!t) return null;
+    let d=null,m=null; const mm=/^(.*?)-(\d{1,2})-(\d{1,2})$/.exec(t);
+    if(mm&&mm[1]){ t=mm[1]; d=mm[2].padStart(2,'0'); m=mm[3].padStart(2,'0'); }
+    return docs.filter(r=>(nz(r.doc)===nz(t))&&(d==null||(r.d===d&&r.m===m)));
+  }
+  const fmtDocs=r=>'Documento '+r.doc+' · '+r.d+'/'+r.m+'/'+r.y+(r.suc?' · '+r.suc:'')+' · '+r.items+' ítems · '+fmtQty(r.units)+' unidades';
+  function showDq(){
+    const q=qDoc($('dqi').value), box=$('dqr');
+    if(q===null){ box.innerHTML=''; return; }
+    if(q.length) box.innerHTML=q.map(r=>'<div class="dqr ok">Remito cargado<br>'+r.items+' ítems · '+fmtQty(r.units)+' unidades<small>'+esc(fmtDocs(r))+'</small></div>').join('');
+    else box.innerHTML='<div class="dqr no">Remito No Cargado</div>';
+  }
+  function listDq(){ const a=docs.slice().sort((p,q)=>q.ts-p.ts); $('dql').innerHTML=a.length?a.map(r=>'<div>'+esc(fmtDocs(r))+'</div>').join(''):'Todavía no hay documentos cargados.'; }
+  $('bdocs').onclick=()=>{ $('dq').hidden=false; $('dqi').value=''; $('dqr').innerHTML=''; listDq(); try{ window.scrollTo(0,0); }catch(_){} $('dqi').focus(); };
+  $('dqx').onclick=()=>{ $('dq').hidden=true; };
+  $('dqgo').onclick=showDq;
+  $('dqi').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); showDq(); } });
+  const csvq=s=>'"'+String(s).replace(/"/g,'""')+'"';
+  const dec=q=>fmtQty(q).replace('.',',');
+  // ---- respaldo ----
+  const dstr=()=>{ const t=new Date(); return String(t.getDate()).padStart(2,'0')+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+t.getFullYear(); };
+  const dayKey=()=>{ const t=new Date(); return t.getFullYear()+'-'+(t.getMonth()+1)+'-'+t.getDate(); };
+  function updFri(){ const f=$('fri'), last=Number(ls.get('bsv_lastbk_ts',0))||0, n=docs.filter(r=>(r.ts||0)>last).length, show=n>0; if(show) $('frit').textContent='📅 '+(n===1?'Hay 1 parte sin respaldar':'Hay '+n+' partes sin respaldar')+': toque «Hacer respaldo y enviar» al terminar el día.'; f.hidden=!show; f.style.display=show?'flex':'none'; }
+  function bkFiles(){
+    const tt=new Date(), nm='RESPALDO_PARTES_'+dstr()+'_'+String(tt.getHours()).padStart(2,'0')+String(tt.getMinutes()).padStart(2,'0');
+    const data={v:1,generado:new Date().toISOString(),version:'32',docs,custom:customs};
+    let c='\uFEFFDocumento;Fecha;Sucursal;N° cliente;C.I.;SKU;Cantidad;Descripción\n';
+    docs.slice().sort((a,b)=>a.ts-b.ts).forEach(r=>{ (r.lines||[{ci:'',sku:'',qty:'',desc:'(sin detalle: '+r.items+' ítems, '+fmtQty(r.units)+' unidades)'}]).forEach(l=>{ c+=[csvq(r.doc),csvq(r.d+'/'+r.m+'/'+r.y),csvq(r.suc||''),csvq(r.cli||''),csvq(l.ci),csvq(l.sku),dec(l.qty),csvq(l.desc)].join(';')+'\n'; }); });
+    return [new File([JSON.stringify(data)],nm+'.json',{type:'application/json'}),new File([c],nm+'.csv',{type:'text/csv'})];
+  }
+  function dlq(f){ const a=document.createElement('a'); a.href=URL.createObjectURL(f); a.download=f.name; document.body.appendChild(a); a.click(); a.remove(); }
+  async function doBackup(){
+    if(!docs.length){ note('Todavía no hay documentos cargados para respaldar.'); return; }
+    const fs=bkFiles(); let sent=false;
+    try{
+      if(navigator.canShare&&navigator.canShare({files:fs})){ await navigator.share({title:'Respaldo partes '+dstr(),text:'Respaldo de partes de devoluciones '+dstr()+' ('+docs.length+' documentos)',files:fs}); sent=true; }
+    }catch(e){ if(e&&e.name==='AbortError'){ note('Envío cancelado. El respaldo no se marcó como hecho.'); return; } }
+    if(!sent){ fs.forEach(dlq); note('Se descargaron 2 archivos de respaldo ('+fs[0].name+'). Adjúntelos y envíelos por WhatsApp o mail.'); }
+    else note('Respaldo enviado ('+docs.length+' documentos).');
+    ls.set('bsv_lastbk_ts',Date.now()); updFri();
+  }
+  $('bbk').onclick=doBackup;
+  $('dqrest').onclick=()=>$('fbk').click();
+  $('fbk').addEventListener('change',async e=>{
+    const f=e.target.files[0]; e.target.value=''; if(!f) return;
+    try{
+      const d=JSON.parse(await f.text()); if(!d||!Array.isArray(d.docs)) throw new Error('formato');
+      let n=0; for(const r of d.docs){ if(!r||!r.key) continue; const i=docs.findIndex(x=>x.key===r.key); if(i<0){ docs.push(r); n++; } else if((r.ts||0)>(docs[i].ts||0)){ docs[i]=r; n++; } }
+      for(const c of (d.custom||[])){ if(!customs.some(x=>x.interno===c.interno&&x.sku===c.sku)) customs.push(c); }
+      ls.set('bsv_docs',docs); ls.set('bsv_custom',customs); reindex(); listDq(); note('Respaldo restaurado: '+n+' documento(s) nuevo(s) o actualizado(s).');
+    }catch(err){ note('No se pudo leer el respaldo (use el archivo .json).'); }
+  });
+  updFri();
+  $('bshare').onclick=async()=>{ if(navigator.share){ try{ await navigator.share({title:'Parte de devoluciones',text:txt()}); }catch(_){} } else { try{ await navigator.clipboard.writeText(txt()); note('Texto copiado.'); }catch(e){} } };
+  $('bcsv2').onclick=()=>{
+    const m=new Map();
+    lines.forEach(l=>{ if(!l.sel) return; const k=l.sel.sku+'|'+l.sel.desc; const e=m.get(k)||{sku:l.sel.sku,desc:l.sel.desc,co:CO[l.sel.co],q:0}; e.q+=Number(l.qty)||0; m.set(k,e); });
+    let o='﻿SKU;Descripción;Empresa;Cantidad total\n';
+    [...m.values()].sort((a,b)=>a.sku.localeCompare(b.sku,undefined,{numeric:true})).forEach(e=>{ o+=[csvq(e.sku),csvq(e.desc),csvq(e.co),dec(e.q)].join(';')+'\n'; });
+    dl('devoluciones_por_SKU_'+stamp()+'.csv',o,'text/csv;charset=utf-8'); };
+
+  // ---- imagen / PDF (OCR) ----
+  const TESS='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+  const PDFJS='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+  const PDFW='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  const oStat=$('ocrstat');
+  let lastFile=null, lastIds=[], worker=null, busy=false;
+  const status=t=>{ oStat.textContent=t; };
+  const loadScript=src=>new Promise((ok,no)=>{ const e=document.createElement('script'); e.src=src; e.onload=ok; e.onerror=()=>no(new Error('no hay conexión para cargar el lector')); document.head.appendChild(e); });
+  function setBtns(b){ for(const id of ['bcam','bfile','ocrre']) $(id).disabled=b; }
+
+  const withTimeout=(pr,ms,msg)=>Promise.race([pr,new Promise((_,no)=>setTimeout(()=>no(new Error(msg)),ms))]);
+  async function getWorker(){
+    if(worker) return worker;
+    status('Cargando el lector de imágenes… (necesita internet)');
+    if(!window.Tesseract) await withTimeout(loadScript(TESS),20000,'No se pudo cargar el lector de imágenes. Revise la conexión o use el archivo HTML en Chrome.');
+    worker=await withTimeout(Tesseract.createWorker('eng',1,{logger:m=>{ if(m.status==='recognizing text') status('Leyendo… '+Math.round((m.progress||0)*100)+'%'); }}),30000,'El lector de imágenes no arrancó en esta vista. Escriba los códigos a mano o use el archivo HTML en Chrome.');
+    await worker.setParameters({tessedit_pageseg_mode:'6',preserve_interword_spaces:'1'});
+    return worker;
+  }
+  async function imgToCanvas(file){
+    const bmp=await createImageBitmap(file);
+    const sc=bmp.width<1800?1800/bmp.width:(bmp.width>2600?2600/bmp.width:1);
+    const c=document.createElement('canvas'); c.width=Math.round(bmp.width*sc); c.height=Math.round(bmp.height*sc);
+    c.getContext('2d').drawImage(bmp,0,0,c.width,c.height); if(bmp.close) bmp.close();
+    return c;
+  }
+  function flatten(c){
+    // aplana sombras y degradé de luz: divide cada punto por el brillo de su entorno
+    const w=c.width,h=c.height,f=32;
+    const sw=Math.max(4,Math.round(w/f)), sh=Math.max(4,Math.round(h/f));
+    const sm=document.createElement('canvas'); sm.width=sw; sm.height=sh;
+    const sx=sm.getContext('2d'); sx.imageSmoothingEnabled=true; sx.imageSmoothingQuality='high'; sx.drawImage(c,0,0,sw,sh);
+    const bg=document.createElement('canvas'); bg.width=w; bg.height=h;
+    const bx=bg.getContext('2d'); bx.imageSmoothingEnabled=true; bx.imageSmoothingQuality='high'; bx.drawImage(sm,0,0,w,h);
+    const ctx=c.getContext('2d'), a=ctx.getImageData(0,0,w,h), d=a.data, bd=bx.getImageData(0,0,w,h).data;
+    const g=new Float32Array(w*h), hist=new Uint32Array(256);
+    for(let i=0,j=0;i<d.length;i+=4,j++){
+      const gr=(d[i]*299+d[i+1]*587+d[i+2]*114)/1000, b=(bd[i]*299+bd[i+1]*587+bd[i+2]*114)/1000+1;
+      let v=gr/b*235; if(v>255) v=255; g[j]=v; hist[v|0]++;
+    }
+    let acc=0, lo=0; const tgt=w*h*0.01;
+    for(let k=0;k<256;k++){ acc+=hist[k]; if(acc>=tgt){ lo=k; break; } }
+    const sc=255/Math.max(1,235-lo);
+    for(let i=0,j=0;i<d.length;i+=4,j++){ let v=(g[j]-lo)*sc; v=v<0?0:(v>255?255:v); d[i]=d[i+1]=d[i+2]=v; }
+    ctx.putImageData(a,0,0);
+  }
+  async function ocrCanvas(c){
+    if($('ocrenh').checked) flatten(c);
+    const wk=await getWorker(); status('Leyendo…');
+    return await tessRead(wk,c);
+  }
+  function linesOf(data){
+    let ls=data.lines;
+    if(!ls||!ls.length){ ls=[]; for(const b of (data.blocks||[])) for(const p of (b.paragraphs||[])) for(const l of (p.lines||[])) ls.push(l); }
+    return (ls||[]).map(l=>({words:(l.words||[]).map(w=>({t:w.text,x0:w.bbox.x0,y0:w.bbox.y0,x1:w.bbox.x1,y1:w.bbox.y1}))}));
+  }
+  // 1.ª pasada: el tramo entero. 2.ª pasada: solo la columna de códigos, con dígitos únicamente (lee mucho mejor los números).
+  async function tessLines(wk,c){
+    const r=await wk.recognize(c); const L=linesOf(r.data);
+    try{
+      const a=codeLinesOf(L); if(a.length<3) return L;
+      let x0=1e9,x1=0,y0=1e9,y1=0; const hs=[];
+      for(const q of a){ x0=Math.min(x0,q.w.x0); x1=Math.max(x1,q.w.x1); y0=Math.min(y0,q.w.y0); y1=Math.max(y1,q.w.y1); hs.push(q.w.y1-q.w.y0); }
+      hs.sort((m,n)=>m-n); const hh=Math.max(8,hs[hs.length>>1]), pad=Math.round((x1-x0)*0.2);
+      const cx0=Math.max(0,Math.round(x0-pad)), cx1=Math.min(c.width,Math.round(x1+pad)), cy0=Math.max(0,Math.round(y0-hh)), cy1=Math.min(c.height,Math.round(y1+hh));
+      const s2=Math.max(0.5,Math.min(3,42/hh)), cw=cx1-cx0, ch=cy1-cy0;
+      const cc=document.createElement('canvas'); cc.width=Math.max(8,Math.round(cw*s2)); cc.height=Math.max(8,Math.round(ch*s2));
+      const g=cc.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,cc.width,cc.height); g.imageSmoothingQuality='high'; g.drawImage(c,cx0,cy0,cw,ch,0,0,cc.width,cc.height);
+      status('Leyendo los códigos…');
+      await wk.setParameters({tessedit_char_whitelist:'0123456789',tessedit_pageseg_mode:'6'});
+      let r2; try{ r2=await wk.recognize(cc); } finally { await wk.setParameters({tessedit_char_whitelist:'',tessedit_pageseg_mode:'6'}); }
+      const L2=linesOf(r2.data); for(const l of L2) for(const w of l.words){ w.x0=w.x0/s2+cx0; w.x1=w.x1/s2+cx0; w.y0=w.y0/s2+cy0; w.y1=w.y1/s2+cy0; }
+      mergeCodeColumn(L,L2,idx); return L;
+    }catch(e){ try{ await wk.setParameters({tessedit_char_whitelist:'',tessedit_pageseg_mode:'6'}); }catch(_){} return L; }
+  }
+  // Fotos de hoja entera (con mesa, papeles, etc. alrededor): se lee por tramos y se unen los renglones.
+  async function tessRead(wk,c){
+    const W=c.width,H=c.height,bh=Math.round(W*0.45),step=Math.round(bh*0.6);
+    if(H<=bh*1.15) return textFromLines(await tessLines(wk,c));
+    const bands=[]; for(let y=0;;y+=step){ let y0=y,y1=Math.min(H,y+bh); if(y1-y0<bh*0.9&&y0>0){ y0=Math.max(0,H-bh); y1=H; } bands.push([y0,y1]); if(y1>=H) break; }
+    const items=[];
+    for(let i=0;i<bands.length;i++){
+      status('Leyendo la hoja… parte '+(i+1)+' de '+bands.length);
+      const y0=bands[i][0], hh=bands[i][1]-y0, bc=document.createElement('canvas'); bc.width=W; bc.height=hh;
+      bc.getContext('2d').drawImage(c,0,y0,W,hh,0,0,W,hh);
+      for(const l of await tessLines(wk,bc)){
+        const ws=l.words; if(!ws||!ws.length) continue;
+        const a=Math.min(...ws.map(w=>w.y0)), b=Math.max(...ws.map(w=>w.y1)), yc=(a+b)/2, hs=ws.map(w=>w.y1-w.y0).sort((p,q)=>p-q);
+        items.push({l,yc:yc+y0,cen:1-Math.abs(yc-hh/2)/(hh/2),h:hs[hs.length>>1]});
+      }
+    }
+    return textFromLines(mergeBandLines(items));
+  }
+  function pdfLines(tc){
+    const rows=[];
+    for(const it of tc.items){ if(!it.str||!it.str.trim()) continue; const y=it.transform[5], x=it.transform[4];
+      let r=rows.find(r=>Math.abs(r.y-y)<3); if(!r){ r={y,items:[]}; rows.push(r); } r.items.push({x,s:it.str}); }
+    rows.sort((a,b)=>b.y-a.y);
+    return rows.map(r=>r.items.sort((a,b)=>a.x-b.x).map(i=>i.s).join(' ')).join('\n');
+  }
+  async function readPdf(buf){
+    if(!window.pdfjsLib) await loadScript(PDFJS);
+    pdfjsLib.GlobalWorkerOptions.workerSrc=PDFW;
+    const pdf=await pdfjsLib.getDocument({data:buf}).promise, n=Math.min(pdf.numPages,12);
+    let text='';
+    for(let p=1;p<=n;p++){ const pg=await pdf.getPage(p); text+=pdfLines(await pg.getTextContent())+'\n'; }
+    if(text.replace(/\s/g,'').length>=40) return text;   // PDF con texto: se lee directo, sin OCR
+    text='';
+    for(let p=1;p<=n;p++){
+      status('Leyendo página '+p+' de '+n+'…');
+      const pg=await pdf.getPage(p), vp=pg.getViewport({scale:2.5});
+      const c=document.createElement('canvas'); c.width=vp.width; c.height=vp.height;
+      await pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
+      text+=(await ocrCanvas(c))+'\n';
+    }
+    return text;
+  }
+  function applyText(text){
+    $('ocrtxt').textContent=text||'(no se leyó texto)'; $('ocrdet').style.display='';
+    lines=lines.filter(l=>!lastIds.includes(l.id)); lastIds=[];
+    const r=parseOcrText(text,idx,{co:detectCo(text)});
+    r.items.forEach(it=>{
+      const ex={ocr:true,raw:it.raw,approx:it.approx,how:it.how,lowmatch:it.lowmatch,bigqty:it.bigqty};
+      if(it.cands&&it.cands.length){ ex.cands=it.cands; ex.sel=it.cands.length===1?it.cands[0]:null; ex.sugg=[]; ex.via='';
+        if(ex.sel&&!hasMeas(ex.sel.desc)){ const pd=pctDesc(it.raw); if(pd) ex.sel=Object.assign({},ex.sel,{desc:pd,descSrc:1}); } }
+      const l=addLine(it.code,it.qty,ex); lastIds.push(l.id);
+    });
+    setTimeout(checkDups,50);
+    let sm='';
+    const sc=detectSuc(text,SUCURSALES);
+    if(sc&&!meta.suc){ meta.suc=sc.n; saveMeta(); syncSuc(); sm=' Sucursal detectada: '+sc.nombre+' (verifíquela).'; }
+    const sinq=r.items.filter(i=>i.qty==null).length;
+    status(r.items.length
+      ?'Se cargaron '+r.items.length+' renglones'+(sinq?' ('+sinq+' sin cantidad)':'')+'. Compare cada uno con el papel antes de imprimir.'+sm
+      :'No se reconoció ningún código. Pruebe «Volver a leer» con o sin realce, o acerque más la foto. Abra «Texto leído» para ver qué leyó.'+sm);
+  }
+  async function run(){
+    if(!lastFile||busy) return; busy=true; setBtns(true);
+    try{
+      status('Preparando la imagen…');
+      const f=lastFile; let text='';
+      if(f.type==='application/pdf'||/\.pdf$/i.test(f.name)) text=await readPdf(await f.arrayBuffer());
+      else text=await ocrCanvas(await imgToCanvas(f));
+      applyText(text);
+    }catch(e){ { const m=(e&&e.message)?String(e.message):String(e); status(/Worker|blob|origin/i.test(m)?'Este navegador no permitió iniciar el lector de fotos. Pruebe abrir el archivo directamente en Chrome (con internet) o cargue los productos escribiéndolos.':'No se pudo leer el archivo: '+m); } }
+    busy=false; setBtns(false);
+  }
+  $('bcam').onclick=()=>$('fcam').click();
+  $('bfile').onclick=()=>$('ffile').click();
+  for(const id of ['fcam','ffile']) $(id).addEventListener('change',e=>{
+    const f=e.target.files[0]; e.target.value=''; if(!f) return;
+    lastFile=f; lastIds=[]; $('ocrre').style.display=''; run();
+  });
+  $('ocrre').onclick=()=>{ if(lastFile) run(); };
+
+  // ---- escuchar la carga para controlar contra el parte ----
+  let reading=false, speed=Number(ls.get('bsv_speed',1))||1;
+  function showSpd(){ document.querySelectorAll('#spd button').forEach(b=>{ const on=Number(b.dataset.v)===speed; b.classList.toggle('p',on); }); }
+  $('spd').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; speed=Number(b.dataset.v); ls.set('bsv_speed',speed); showSpd(); });
+  showSpd();
+  const U=['cero','uno','dos','tres','cuatro','cinco','seis','siete','ocho','nueve','diez','once','doce','trece','catorce','quince','dieciséis','diecisiete','dieciocho','diecinueve','veinte','veintiuno','veintidós','veintitrés','veinticuatro','veinticinco','veintiséis','veintisiete','veintiocho','veintinueve'];
+  const T=['','','','treinta','cuarenta','cincuenta','sesenta','setenta','ochenta','noventa'];
+  const w99=n=>n<30?U[n]:T[Math.floor(n/10)]+(n%10?' y '+U[n%10]:'');
+  const pairW=g=>g.length===2&&g[0]==='0'?'cero '+U[+g[1]]:w99(+g);
+  // C.I. en grupos, como se dicta: 66618 -> «sesenta y seis, seis, dieciocho»; 6718 -> «sesenta y siete, dieciocho»
+  function ciWords(c){
+    c=String(c).replace(/\D/g,''); const n=c.length; let g=[];
+    if(n<=2) g=[c];
+    else if(n===3) g=[c[0],c.slice(1)];
+    else if(n%2===0) for(let i=0;i<n;i+=2) g.push(c.slice(i,i+2));
+    else { const h=(n-1)/2, part=x=>{ const o=[]; let i=0; if(x.length%2){ o.push(x[0]); i=1; } for(;i<x.length;i+=2) o.push(x.slice(i,i+2)); return o; }; g=part(c.slice(0,h)).concat([c[h]],part(c.slice(h+1))); }
+    return g.map(x=>x.length===1?U[+x]:pairW(x)).join(', ');
+  }
+  const qW=q=>{ const t=fmtQty(q); if(/^\d+$/.test(t)&&+t<100) return w99(+t); return t.replace('.',' coma '); };
+  const spk=t=>new Promise(res=>{ try{ const u=new SpeechSynthesisUtterance(t); u.lang='es-AR'; u.rate=speed; u.onend=u.onerror=()=>res(); speechSynthesis.speak(u); }catch(_){ res(); } });
+  function clearHl(){ document.querySelectorAll('.card.hl').forEach(c=>c.classList.remove('hl')); }
+  async function readBack(){
+    const btn=$('bread');
+    if(reading){ reading=false; try{ speechSynthesis.cancel(); }catch(_){} return; }
+    if(!('speechSynthesis' in window)){ note('Este navegador no puede leer en voz alta.'); return; }
+    if(!lines.length) return;
+    reading=true; btn.textContent='⏹ Detener lectura';
+    try{
+      for(let i=0;i<lines.length&&reading;i++){
+        const l=lines[i], card=$('list').querySelector('[data-id="'+l.id+'"]');
+        clearHl(); if(card){ card.classList.add('hl'); if(card.scrollIntoView) card.scrollIntoView({block:'center',behavior:'smooth'}); }
+        await spk(ciWords(l.code)+'. '+(l.qty==null?'sin cantidad':qW(l.qty)));
+        if(reading) await new Promise(r=>setTimeout(r,500));
+      }
+    } finally { reading=false; clearHl(); btn.textContent='🔊 Escuchar carga y revisar'; }
+  }
+  $('bread').onclick=readBack;
+  // ---- dictado (texto del teclado) ----
+  function addSpoken(r){
+    r.forEach(x=>addLine(x.code,x.qty));
+    setTimeout(checkDups,50); toLast();
+  }
+  $('vadd').onclick=()=>{
+    const t=$('vtxt').value.trim(); if(!t) return;
+    const r=parseUtterance(t.replace(/\n+/g,' siguiente '),has);
+    if(!r.length){ note('No entendí el texto.'); return; }
+    addSpoken(r); $('vtxt').value=''; note('Se agregaron '+r.length+' renglón(es).');
+  };
+
+  render();
+})();
+</script>
+</body>
+</html>
